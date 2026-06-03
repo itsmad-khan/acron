@@ -177,27 +177,12 @@ Return ONLY a JSON array. No extra text. No markdown. Format:
   let response;
 
   try {
-    response = await fetch('https://models.inference.ai.azure.com/chat/completions', {
+    response = await fetch('/api/quiz', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer' + window.ACRCON_API_KEY
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful quiz maker for Pakistani students. Always return valid JSON only.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7
-      })
+      body: JSON.stringify({ prompt: prompt })
     });
   } catch (fetchError) {
     console.log('Fetch failed:', fetchError);
