@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IlmPath — Books</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="CSS/style.css"/>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<nav class="navbar">
+  <div class="logo">
+    <div class="logo-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+    <div>
+      <span class="logo-name">IlmPath</span>
+      <span class="logo-urdu">علم کی راہ</span>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="lang-switch">
+      <button class="lang-btn active" onclick="setLang('en')" id="btn-en">English</button>
+      <button class="lang-btn" onclick="setLang('ur')" id="btn-ur">اردو</button>
+    </div>
+    <a href="progress.html" class="nav-icon-btn" title="My Progress">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </a>
+    <a href="profile.html" class="nav-icon-btn" title="My Profile">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+    </a>
+    <a href="dashboard.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Dashboard
+    </a>
+  </div>
+</nav>
+
+<main class="reader-main">
+
+  <div class="reader-left" id="reader-left">
+    <div class="book-header">
+      <div class="book-cover-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <div>
+        <div class="book-title" id="book-title">Physics</div>
+        <div class="book-meta" id="book-meta">Class 12 — Balochistan Board</div>
+      </div>
+    </div>
+    <div class="chapters-label" id="txt-chapters">Chapters</div>
+    <div class="chapters-list" id="chapters-list"></div>
+  </div>
+
+  <div class="reader-right" id="reader-right">
+    <div class="chapter-view" id="chapter-view">
+      <div class="pick-chapter-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <p id="txt-pick-chapter">Pick a chapter from the left to start reading</p>
+        <p class="pick-urdu">بائیں طرف سے باب منتخب کریں</p>
+      </div>
+    </div>
+
+    <div class="reader-toolbar" id="reader-toolbar" style="display:none">
+      <div class="toolbar-left">
+        <span class="current-chapter-name" id="current-chapter-name"></span>
+      </div>
+      <div class="toolbar-right">
+        <button class="toolbar-btn" onclick="changeFont(-1)" title="Smaller text">A-</button>
+        <button class="toolbar-btn" onclick="changeFont(1)" title="Bigger text">A+</button>
+        <button class="toolbar-btn" onclick="toggleDark()" id="dark-btn" title="Dark mode">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <a class="toolbar-btn quiz-from-chapter" id="btn-quiz-chapter" href="quiz.html">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <span id="txt-quiz-this">Quiz this chapter</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="pdf-frame-wrap" id="pdf-frame-wrap" style="display:none">
+      <iframe id="pdf-frame" class="pdf-frame" src="" allowfullscreen></iframe>
+    </div>
+  </div>
+
+</main>
+
+<script src="JS/lang.js"></script>
+<script src="JS/reader.js"></script>
+<script>generateStars(); initReader();</script>
+</body>
+</html>
