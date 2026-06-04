@@ -265,7 +265,7 @@ function initReader() {
       },
   
       balochistan: {
-        '9':  { 'Physics': '', 'Chemistry': '', 'Biology': '', 'Mathematics': '', 'English': '', 'Urdu': '' },
+        '9':  { 'Physics': '', 'Chemistry': '', 'Biology': 'https://drive.google.com/file/d/1nVI5Lx6V4kDByF9zyFkwbs0jAV6feHJ4/preview', 'Mathematics': '', 'English': '', 'Urdu': '' },
         '10': { 'Physics': '', 'Chemistry': '', 'Biology': '', 'Mathematics': '', 'English': '', 'Urdu': '' },
         '11': { 'Physics': '', 'Chemistry': '', 'Biology': '', 'Mathematics': '', 'English': '', 'Urdu': '' },
         '12': { 'Physics': '', 'Chemistry': '', 'Biology': '', 'Mathematics': '', 'English': '', 'Urdu': '' },
