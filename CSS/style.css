@@ -828,3 +828,18 @@ input[type=range]::-webkit-slider-thumb {
   color: #a78bfa;
   background: rgba(108,99,255,0.08);
 }
+
+/* ===== PDF UPLOAD ===== */
+.pdf-upload-area {
+  border: 2px dashed rgba(108,99,255,0.3);
+  border-radius: 16px;
+  padding: 2.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(108,99,255,0.04);
+}
+.pdf-upload-area:hover {
+  border-color: #6c63ff;
+  background: rgba(108,99,255,0.08);
+}
