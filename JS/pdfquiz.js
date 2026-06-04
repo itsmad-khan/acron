@@ -9,10 +9,6 @@ function handlePDFUpload(input) {
   const file = input.files[0];
   if (!file) return;
 
-  if (file.size > 10 * 1024 * 1024) {
-    alert('File is too big! Maximum size is 10MB.');
-    return;
-  }
 
   // Show file name
   document.getElementById('upload-text').textContent = '✅ ' + file.name;
