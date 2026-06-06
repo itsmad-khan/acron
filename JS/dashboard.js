@@ -1,13 +1,13 @@
 import { firebaseGetUser, firebaseLogout } from './firebase-config.js';
 
 async function initDashboard() {
-  const loggedIn = localStorage.getItem('ilmpath_logged_in');
+  const loggedIn = localStorage.getItem('acron_logged_in');
   if (!loggedIn) {
     window.location.href = 'login.html';
     return;
   }
 
-  const uid = localStorage.getItem('ilmpath_uid');
+  const uid = localStorage.getItem('acron_uid');
   if (!uid) {
     window.location.href = 'login.html';
     return;
@@ -21,7 +21,7 @@ async function initDashboard() {
     }
 
     // Save fresh data to localStorage
-    localStorage.setItem('ilmpath_user', JSON.stringify({...user, uid}));
+    localStorage.setItem('acron_user', JSON.stringify({...user, uid}));
 
     // Show last login
     const lastLoginEl = document.getElementById('last-login-time');

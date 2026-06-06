@@ -1,13 +1,13 @@
 function initReader() {
     // Check if student is logged in
-    const loggedIn = localStorage.getItem('ilmpath_logged_in');
+    const loggedIn = localStorage.getItem('acron_logged_in');
     if (!loggedIn) {
       window.location.href = 'login.html';
       return;
     }
   
     // Get student data
-    const saved = localStorage.getItem('ilmpath_user');
+    const saved = localStorage.getItem('acron_user');
 if (!saved) {
   window.location.href = 'login.html';
   return;
@@ -163,7 +163,7 @@ console.log('Reader user:', user);
     const frame = document.getElementById('pdf-frame');
     if (!frame) return;
   
-    const saved = localStorage.getItem('ilmpath_user');
+    const saved = localStorage.getItem('acron_user');
     if (!saved) return;
     const user = JSON.parse(saved);
     const board = user.board;
@@ -301,14 +301,14 @@ console.log('Reader user:', user);
   }
   
   function saveChapterRead(subject, chNum) {
-    const saved = localStorage.getItem('ilmpath_user');
+    const saved = localStorage.getItem('acron_user');
     if (!saved) return;
     const user = JSON.parse(saved);
     if (!user.chaptersRead) user.chaptersRead = [];
     const key = subject + '_' + chNum;
     if (!user.chaptersRead.includes(key)) {
       user.chaptersRead.push(key);
-      localStorage.setItem('ilmpath_user', JSON.stringify(user));
+      localStorage.setItem('acron_user', JSON.stringify(user));
     }
   }
   

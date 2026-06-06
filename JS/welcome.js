@@ -54,15 +54,15 @@ function goToSignup() {
 
   // If other/senior selected skip board selection
   if (selClass === 'other') {
-    localStorage.setItem('ilmpath_board', 'none');
-    localStorage.setItem('ilmpath_class', 'other');
+    localStorage.setItem('acron_board', 'none');
+    localStorage.setItem('acron_class', 'other');
     window.location.href = 'signup.html';
     return;
   }
 
   if (!selBoard) return;
-  localStorage.setItem('ilmpath_board', selBoard);
-  localStorage.setItem('ilmpath_class', selClass);
+  localStorage.setItem('acron_board', selBoard);
+  localStorage.setItem('acron_class', selClass);
   window.location.href = 'signup.html';
 }
 

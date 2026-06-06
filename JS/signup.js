@@ -74,8 +74,8 @@ async function doSignup() {
 
   if (!name || !email || !pass || pass !== pass2) return;
 
-  const board = localStorage.getItem('ilmpath_board') || 'none';
-  const cls = localStorage.getItem('ilmpath_class') || '9';
+  const board = localStorage.getItem('acron_board') || 'none';
+  const cls = localStorage.getItem('acron_class') || '9';
 
   const btn = document.getElementById('signup-btn');
   btn.setAttribute('disabled', true);
@@ -84,9 +84,9 @@ async function doSignup() {
   try {
     const user = await firebaseSignup(name, email, pass, board, cls, selectedMedium);
 
-    localStorage.setItem('ilmpath_logged_in', 'true');
-    localStorage.setItem('ilmpath_uid', user.uid);
-    localStorage.setItem('ilmpath_user', JSON.stringify({
+    localStorage.setItem('acron_logged_in', 'true');
+    localStorage.setItem('acron_uid', user.uid);
+    localStorage.setItem('acron_user', JSON.stringify({
       name, email, board, cls,
       medium: selectedMedium,
       uid: user.uid
@@ -116,8 +116,8 @@ async function doSignup() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  const board = localStorage.getItem('ilmpath_board') || 'none';
-  const cls = localStorage.getItem('ilmpath_class') || '9';
+  const board = localStorage.getItem('acron_board') || 'none';
+  const cls = localStorage.getItem('acron_class') || '9';
 
   const boardNames = {
     punjab: 'Punjab Board', sindh: 'Sindh Board',

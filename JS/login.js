@@ -37,8 +37,8 @@ async function doLogin() {
     resetLoginAttempts(email);
     saveLastLogin();
 
-    localStorage.setItem('ilmpath_logged_in', 'true');
-    localStorage.setItem('ilmpath_uid', user.uid);
+    localStorage.setItem('acron_logged_in', 'true');
+    localStorage.setItem('acron_uid', user.uid);
 
     const isNewDevice = checkNewDevice();
     if (isNewDevice) {

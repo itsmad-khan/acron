@@ -2,14 +2,14 @@ let allHistory = [];
 
 function initProgress() {
   // Check if student is logged in
-  const loggedIn = localStorage.getItem('ilmpath_logged_in');
+  const loggedIn = localStorage.getItem('acron_logged_in');
   if (!loggedIn) {
     window.location.href = 'login.html';
     return;
   }
 
   // Get student data
-  const saved = localStorage.getItem('ilmpath_user');
+  const saved = localStorage.getItem('acron_user');
   if (!saved) return;
   const user = JSON.parse(saved);
 

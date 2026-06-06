@@ -136,11 +136,11 @@ function generateStars() {
     }
   };
   
-  let currentLang = localStorage.getItem('ilmpath_lang') || 'en';
+  let currentLang = localStorage.getItem('acron_lang') || 'en';
   
   function setLang(lang) {
     currentLang = lang;
-    localStorage.setItem('ilmpath_lang', lang);
+    localStorage.setItem('acron_lang', lang);
     document.documentElement.lang = lang;
   
     const btnEn = document.getElementById('btn-en');
