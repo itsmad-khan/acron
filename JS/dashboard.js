@@ -14,15 +14,14 @@ async function initDashboard() {
   }
 
   try {
-    // Get user data from Firebase
     const user = await firebaseGetUser(uid);
     if (!user) {
       window.location.href = 'login.html';
       return;
     }
 
-    // Save to localStorage for quick access
-    localStorage.setItem('ilmpath_user', JSON.stringify(user));
+    // Save fresh data to localStorage
+    localStorage.setItem('ilmpath_user', JSON.stringify({...user, uid}));
 
     // Show last login
     const lastLoginEl = document.getElementById('last-login-time');
@@ -42,7 +41,7 @@ async function initDashboard() {
 
     // Show greeting
     const hour = new Date().getHours();
-    let greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
     const greetEl = document.getElementById('dash-greeting');
     if (greetEl) greetEl.textContent = greet + ', ' + user.name + '! 👋';
 

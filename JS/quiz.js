@@ -57,7 +57,7 @@ if (user.cls === 'other') {
   window.location.href = 'pdfquiz.html';
   return;
 }
-
+const user = JSON.parse(saved);
 const subs = subjects[user.cls] || subjects['9'];
 subs.forEach(s => {
   const opt = document.createElement('option');

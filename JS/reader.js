@@ -8,8 +8,12 @@ function initReader() {
   
     // Get student data
     const saved = localStorage.getItem('ilmpath_user');
-    if (!saved) return;
-    const user = JSON.parse(saved);
+if (!saved) {
+  window.location.href = 'login.html';
+  return;
+}
+const user = JSON.parse(saved);
+console.log('Reader user:', user);
   
     // Get subject from URL
     const params = new URLSearchParams(window.location.search);

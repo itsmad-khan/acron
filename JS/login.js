@@ -9,7 +9,6 @@ function validateLogin() {
   const email = document.getElementById('inp-email').value.trim();
   const pass = document.getElementById('inp-pass').value;
   const btn = document.getElementById('login-btn');
-
   if (email.includes('@') && email.includes('.') && pass.length >= 6) {
     btn.removeAttribute('disabled');
   } else {
@@ -23,7 +22,6 @@ async function doLogin() {
   const errEl = document.getElementById('err-login');
   errEl.textContent = '';
 
-  // Check brute force
   const attempt = checkLoginAttempts(email);
   if (attempt.blocked) {
     errEl.textContent = 'Too many failed attempts. Try again in ' + attempt.waitMins + ' minutes.';
@@ -36,16 +34,12 @@ async function doLogin() {
 
   try {
     const user = await firebaseLogin(email, pass);
-
-    // Reset failed attempts
     resetLoginAttempts(email);
     saveLastLogin();
 
-    // Save basic info locally
     localStorage.setItem('ilmpath_logged_in', 'true');
     localStorage.setItem('ilmpath_uid', user.uid);
 
-    // Check new device
     const isNewDevice = checkNewDevice();
     if (isNewDevice) {
       localStorage.setItem('acron_show_device_warning', 'true');
@@ -56,7 +50,6 @@ async function doLogin() {
   } catch (err) {
     console.log('Login error:', err);
     recordFailedLogin(email);
-
     btn.removeAttribute('disabled');
     btn.innerHTML = '<span>Log in</span>';
 
@@ -69,3 +62,15 @@ async function doLogin() {
     errEl.textContent = errMsg;
   }
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+  const emailInp = document.getElementById('inp-email');
+  const passInp = document.getElementById('inp-pass');
+  const eyeBtn = document.getElementById('eye-btn');
+  const loginBtn = document.getElementById('login-btn');
+
+  if (emailInp) emailInp.addEventListener('input', validateLogin);
+  if (passInp) passInp.addEventListener('input', validateLogin);
+  if (eyeBtn) eyeBtn.addEventListener('click', togglePass);
+  if (loginBtn) loginBtn.addEventListener('click', doLogin);
+});
