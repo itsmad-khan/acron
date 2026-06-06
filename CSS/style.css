@@ -843,3 +843,174 @@ input[type=range]::-webkit-slider-thumb {
   border-color: #6c63ff;
   background: rgba(108,99,255,0.08);
 }
+
+/* ===== OTHER CLASS ITEM ===== */
+.other-item:hover {
+  border-color: #a855f7 !important;
+  background: rgba(168,85,247,0.1) !important;
+}
+.other-item.selected {
+  border-color: #a855f7 !important;
+  background: rgba(168,85,247,0.15) !important;
+  box-shadow: 0 0 0 3px rgba(168,85,247,0.2) !important;
+}
+
+/* ===== LIGHT THEME ===== */
+body.light-theme {
+  background: #f0f2ff;
+  color: #1a1a2e;
+}
+
+body.light-theme .navbar {
+  background: rgba(255,255,255,0.9);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+body.light-theme .logo-name { color: #1a1a2e; }
+body.light-theme .logo-urdu { color: #6c63ff; }
+
+body.light-theme .lang-btn { color: #555; }
+body.light-theme .lang-btn.active { background: #6c63ff; color: #fff; }
+
+body.light-theme .selection-card,
+body.light-theme .auth-card,
+body.light-theme .quiz-setup-card,
+body.light-theme .quiz-active-card,
+body.light-theme .results-card,
+body.light-theme .profile-card,
+body.light-theme .profile-top-card,
+body.light-theme .prog-section,
+body.light-theme .quick-quiz-card,
+body.light-theme .stat-card {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.08);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+body.light-theme .board-item,
+body.light-theme .class-item,
+body.light-theme .level-card,
+body.light-theme .subject-item,
+body.light-theme .history-item,
+body.light-theme .history-full-item,
+body.light-theme .option-btn,
+body.light-theme .feat {
+  background: #f8f9ff;
+  border-color: rgba(0,0,0,0.08);
+}
+
+body.light-theme .board-item:hover { background: #eeedfe; }
+body.light-theme .class-item:hover { background: #e1f5ee; }
+
+body.light-theme .hero-title { color: #1a1a2e; }
+body.light-theme .hero-sub { color: #555; }
+body.light-theme .step-title { color: #444; }
+body.light-theme .board-name { color: #1a1a2e; }
+body.light-theme .class-num { color: #0f6e56; }
+body.light-theme .class-sub { color: #555; }
+body.light-theme .auth-title { color: #1a1a2e; }
+body.light-theme .auth-sub { color: #666; }
+body.light-theme .form-label { color: #333; }
+body.light-theme .form-input {
+  background: #f0f2ff;
+  border-color: rgba(0,0,0,0.12);
+  color: #1a1a2e;
+}
+body.light-theme .form-input:focus {
+  background: #eeedfe;
+  border-color: #6c63ff;
+}
+body.light-theme .form-input::placeholder { color: #aaa; }
+
+body.light-theme .dash-greeting { color: #1a1a2e; }
+body.light-theme .dash-info { color: #666; }
+body.light-theme .stat-num { color: #1a1a2e; }
+body.light-theme .stat-label { color: #666; }
+body.light-theme .section-title { color: #1a1a2e; }
+body.light-theme .section-sub { color: #666; }
+body.light-theme .subject-name { color: #1a1a2e; }
+body.light-theme .question-text { color: #1a1a2e; }
+body.light-theme .option-btn { color: #333; }
+body.light-theme .quiz-label { color: #666; }
+body.light-theme .result-score { color: #1a1a2e; }
+body.light-theme .result-msg { color: #555; }
+body.light-theme .loading-title { color: #1a1a2e; }
+body.light-theme .profile-name { color: #1a1a2e; }
+body.light-theme .progress-title { color: #1a1a2e; }
+body.light-theme .bar-name { color: #1a1a2e; }
+body.light-theme .feat-item { color: #555; }
+body.light-theme .login-text { color: #666; }
+body.light-theme .back-link { color: #6c63ff; }
+body.light-theme .nav-icon-btn {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.1);
+  color: #555;
+}
+body.light-theme .nav-icon-btn:hover { background: #eeedfe; color: #6c63ff; }
+body.light-theme .quick-link-btn { color: #555; border-color: rgba(0,0,0,0.1); }
+body.light-theme .quick-link-btn:hover { background: #eeedfe; color: #6c63ff; }
+body.light-theme .filter-btn { color: #555; background: #f0f2ff; border-color: rgba(0,0,0,0.1); }
+body.light-theme .filter-btn.active { background: #eeedfe; color: #6c63ff; border-color: #6c63ff; }
+body.light-theme .chapter-btn { color: #555; }
+body.light-theme .chapter-btn:hover { background: #f0f2ff; color: #1a1a2e; }
+body.light-theme .chapter-btn.active { background: #eeedfe; color: #6c63ff; }
+body.light-theme .toolbar-btn { background: #f0f2ff; border-color: rgba(0,0,0,0.1); color: #555; }
+body.light-theme .hfi-subject { color: #1a1a2e; }
+body.light-theme .hfi-meta { color: #666; }
+body.light-theme .hist-name { color: #1a1a2e; }
+body.light-theme .hist-meta { color: #666; }
+body.light-theme .mini-num { color: #6c63ff; }
+body.light-theme .mini-label { color: #666; }
+body.light-theme .profile-board { color: #6c63ff; }
+body.light-theme .profile-email { color: #666; }
+body.light-theme .danger-sub { color: #666; }
+body.light-theme .qq-title { color: #1a1a2e; }
+body.light-theme .qq-sub { color: #666; }
+body.light-theme .old-quiz-prompt {
+  background: rgba(251,191,36,0.05);
+}
+body.light-theme .pdf-upload-area {
+  background: #f0f2ff;
+  border-color: rgba(108,99,255,0.2);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  color: #9ca3af; cursor: pointer;
+  transition: all 0.2s;
+}
+.theme-toggle:hover {
+  background: rgba(108,99,255,0.15);
+  border-color: #6c63ff;
+  color: #a78bfa;
+}
+body.light-theme .theme-toggle {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.1);
+  color: #555;
+}
+body.light-theme .theme-toggle:hover {
+  background: #eeedfe;
+  color: #6c63ff;
+}
+
+/* ===== DEVICE WARNING ===== */
+.device-warning {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px; font-weight: 600;
+  color: #fbbf24;
+  margin-bottom: 1rem;
+}
+
+body.light-theme .device-warning {
+  background: rgba(251,191,36,0.08);
+}

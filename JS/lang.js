@@ -152,3 +152,32 @@ function generateStars() {
   window.addEventListener('DOMContentLoaded', () => {
     setLang(currentLang);
   });
+
+  // ===== THEME =====
+function toggleTheme() {
+  const isLight = document.body.classList.contains('light-theme');
+  if (isLight) {
+    document.body.classList.remove('light-theme');
+    localStorage.setItem('acron_theme', 'dark');
+    document.getElementById('theme-icon-dark').style.display = 'block';
+    document.getElementById('theme-icon-light').style.display = 'none';
+  } else {
+    document.body.classList.add('light-theme');
+    localStorage.setItem('acron_theme', 'light');
+    document.getElementById('theme-icon-dark').style.display = 'none';
+    document.getElementById('theme-icon-light').style.display = 'block';
+  }
+}
+
+// Apply saved theme on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const savedTheme = localStorage.getItem('acron_theme');
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-theme');
+    const darkIcon = document.getElementById('theme-icon-dark');
+    const lightIcon = document.getElementById('theme-icon-light');
+    if (darkIcon) darkIcon.style.display = 'none';
+    if (lightIcon) lightIcon.style.display = 'block';
+  }
+  setLang(currentLang);
+});
