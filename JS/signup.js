@@ -2,7 +2,6 @@ import { firebaseSignup } from './firebase-config.js';
 
 let selectedMedium = 'english';
 
-
 function setMedium(m) {
   selectedMedium = m;
   document.getElementById('med-en').classList.toggle('active', m === 'english');
@@ -83,10 +82,8 @@ async function doSignup() {
   btn.innerHTML = '<span>Creating account...</span>';
 
   try {
-    // Create account in Firebase
     const user = await firebaseSignup(name, email, pass, board, cls, selectedMedium);
 
-    // Save basic info locally for quick access
     localStorage.setItem('ilmpath_logged_in', 'true');
     localStorage.setItem('ilmpath_uid', user.uid);
     localStorage.setItem('ilmpath_user', JSON.stringify({
@@ -109,16 +106,15 @@ async function doSignup() {
     btn.removeAttribute('disabled');
     btn.innerHTML = '<span>Create my account</span>';
 
-    const errMsg = err.code === 'auth/email-already-in-use' ?
-      'This email is already registered. Please log in.' :
-      err.code === 'auth/weak-password' ?
-      'Password is too weak. Use at least 6 characters.' :
+    const errMsg =
+      err.code === 'auth/email-already-in-use' ? 'This email is already registered. Please log in.' :
+      err.code === 'auth/weak-password' ? 'Password is too weak. Use at least 6 characters.' :
       'Error creating account. Please try again.';
 
     document.getElementById('err-email').textContent = errMsg;
   }
+}
 
-// Add event listeners after DOM loads
 window.addEventListener('DOMContentLoaded', () => {
   const board = localStorage.getItem('ilmpath_board') || 'none';
   const cls = localStorage.getItem('ilmpath_class') || '9';
@@ -137,13 +133,14 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Add input listeners
   const nameInp = document.getElementById('inp-name');
   const emailInp = document.getElementById('inp-email');
   const passInp = document.getElementById('inp-pass');
   const pass2Inp = document.getElementById('inp-pass2');
   const eyeBtn = document.getElementById('eye-btn');
   const signupBtn = document.getElementById('signup-btn');
+  const medEn = document.getElementById('med-en');
+  const medUr = document.getElementById('med-ur');
 
   if (nameInp) nameInp.addEventListener('input', validate);
   if (emailInp) emailInp.addEventListener('input', validate);
@@ -151,5 +148,6 @@ window.addEventListener('DOMContentLoaded', () => {
   if (pass2Inp) pass2Inp.addEventListener('input', validate);
   if (eyeBtn) eyeBtn.addEventListener('click', togglePass);
   if (signupBtn) signupBtn.addEventListener('click', doSignup);
+  if (medEn) medEn.addEventListener('click', () => setMedium('english'));
+  if (medUr) medUr.addEventListener('click', () => setMedium('urdu'));
 });
-}
