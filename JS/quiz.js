@@ -455,3 +455,17 @@ function newQuiz() {
   userAnswers = [];
   quizMeta = {};
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+  initQuiz();
+});
+
+window.initQuiz = initQuiz;
+window.loadChapters = loadChapters;
+window.selectLevel = selectLevel;
+window.generateNewQuiz = generateNewQuiz;
+window.loadOldQuiz = loadOldQuiz;
+window.retryQuiz = retryQuiz;
+window.newQuiz = newQuiz;
+window.prevQ = prevQ;
+window.nextQ = nextQ;

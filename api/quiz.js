@@ -9,6 +9,10 @@ export default async function handler(req, res) {
     }
   
     const { prompt } = req.body;
+    if (!prompt) {
+      res.status(400).json({ error: 'No prompt provided' });
+      return;
+    }
   
     const response = await fetch('https://models.inference.ai.azure.com/chat/completions', {
       method: 'POST',
