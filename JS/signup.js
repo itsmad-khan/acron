@@ -1,14 +1,24 @@
+import { firebaseSignup } from './firebase-config.js';
+
 let selectedMedium = 'english';
 
 window.addEventListener('DOMContentLoaded', () => {
-  const board = localStorage.getItem('ilmpath_board') || 'punjab';
+  const board = localStorage.getItem('ilmpath_board') || 'none';
   const cls = localStorage.getItem('ilmpath_class') || '9';
+
   const boardNames = {
     punjab: 'Punjab Board', sindh: 'Sindh Board',
     kpk: 'KPK Board', balochistan: 'Balochistan Board', federal: 'Federal Board'
   };
+
   const el = document.getElementById('selected-text');
-  if (el) el.textContent = `${boardNames[board] || board} — Class ${cls}`;
+  if (el) {
+    if (cls === 'other') {
+      el.textContent = 'Senior Student — PDF Quiz access';
+    } else {
+      el.textContent = (boardNames[board] || board) + ' — Class ' + cls;
+    }
+  }
 });
 
 function setMedium(m) {
@@ -52,13 +62,14 @@ function validate() {
   const email = document.getElementById('inp-email').value.trim();
   const pass = document.getElementById('inp-pass').value;
   const pass2 = document.getElementById('inp-pass2').value;
-  let valid = true;
+  const btn = document.getElementById('signup-btn');
 
   document.getElementById('err-name').textContent = '';
   document.getElementById('err-email').textContent = '';
   document.getElementById('err-pass').textContent = '';
   document.getElementById('err-pass2').textContent = '';
 
+  let valid = true;
   if (name.length < 2) valid = false;
   if (!email.includes('@') || !email.includes('.')) valid = false;
   if (pass.length < 6) valid = false;
@@ -67,7 +78,6 @@ function validate() {
     valid = false;
   }
 
-  const btn = document.getElementById('signup-btn');
   if (valid && name && email && pass && pass2) {
     btn.removeAttribute('disabled');
   } else {
@@ -75,7 +85,7 @@ function validate() {
   }
 }
 
-function doSignup() {
+async function doSignup() {
   const name = document.getElementById('inp-name').value.trim();
   const email = document.getElementById('inp-email').value.trim();
   const pass = document.getElementById('inp-pass').value;
@@ -83,28 +93,46 @@ function doSignup() {
 
   if (!name || !email || !pass || pass !== pass2) return;
 
-  // Save user to localStorage (in real website this goes to your database)
-  const user = {
-    name,
-    email,
-    board: localStorage.getItem('ilmpath_board') || 'punjab',
-    cls: localStorage.getItem('ilmpath_class') || '9',
-    medium: selectedMedium,
-    createdAt: new Date().toISOString(),
-    quizHistory: [],
-    chaptersRead: []
-  };
-  localStorage.setItem('ilmpath_user', JSON.stringify(user));
-  localStorage.setItem('ilmpath_logged_in', 'true');
+  const board = localStorage.getItem('ilmpath_board') || 'none';
+  const cls = localStorage.getItem('ilmpath_class') || '9';
 
   const btn = document.getElementById('signup-btn');
   btn.setAttribute('disabled', true);
   btn.innerHTML = '<span>Creating account...</span>';
 
-  const msg = document.getElementById('success-msg');
-  msg.classList.add('show');
+  try {
+    // Create account in Firebase
+    const user = await firebaseSignup(name, email, pass, board, cls, selectedMedium);
 
-  setTimeout(() => {
-    window.location.href = 'dashboard.html';
-  }, 1500);
+    // Save basic info locally for quick access
+    localStorage.setItem('ilmpath_logged_in', 'true');
+    localStorage.setItem('ilmpath_uid', user.uid);
+    localStorage.setItem('ilmpath_user', JSON.stringify({
+      name, email, board, cls,
+      medium: selectedMedium,
+      uid: user.uid
+    }));
+
+    saveLastLogin();
+
+    const msg = document.getElementById('success-msg');
+    msg.classList.add('show');
+
+    setTimeout(() => {
+      window.location.href = 'dashboard.html';
+    }, 1500);
+
+  } catch (err) {
+    console.log('Signup error:', err);
+    btn.removeAttribute('disabled');
+    btn.innerHTML = '<span>Create my account</span>';
+
+    const errMsg = err.code === 'auth/email-already-in-use' ?
+      'This email is already registered. Please log in.' :
+      err.code === 'auth/weak-password' ?
+      'Password is too weak. Use at least 6 characters.' :
+      'Error creating account. Please try again.';
+
+    document.getElementById('err-email').textContent = errMsg;
+  }
 }

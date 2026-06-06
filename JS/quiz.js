@@ -1,3 +1,4 @@
+import { firebaseSaveQuiz } from './firebase-config.js';
 let currentQuiz = [];
 let currentQ = 0;
 let userAnswers = [];
@@ -22,14 +23,48 @@ function initQuiz() {
   };
 
   const sel = document.getElementById('sel-subject');
-  if (!sel) return;
-  const subs = subjects[user.cls] || subjects['9'];
-  subs.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s;
-    opt.textContent = s;
-    sel.appendChild(opt);
-  });
+if (!sel) return;
+
+// If other/senior redirect to PDF quiz
+if (user.cls === 'other') {
+  document.getElementById('quiz-setup').style.display = 'none';
+  document.getElementById('quiz-main-wrap') && 
+  (document.getElementById('quiz-main-wrap').innerHTML = `
+    <div style="
+      text-align:center; padding:3rem;
+      font-family:Nunito,sans-serif;
+    ">
+      <div style="font-size:48px;margin-bottom:1rem">📄</div>
+      <h2 style="color:#fff;font-size:20px;font-weight:800;margin-bottom:8px">
+        You are a Senior Student!
+      </h2>
+      <p style="color:#9ca3af;font-size:14px;margin-bottom:2rem">
+        Please use PDF Quiz to generate questions from your own material.
+      </p>
+      <a href="pdfquiz.html" style="
+        display:inline-flex;align-items:center;gap:8px;
+        background:linear-gradient(135deg,#6c63ff,#a855f7);
+        color:#fff;text-decoration:none;
+        padding:14px 28px;border-radius:14px;
+        font-size:15px;font-weight:700;
+      ">
+        Go to PDF Quiz
+      </a>
+    </div>
+  `);
+
+  // Better approach — just redirect
+  window.location.href = 'pdfquiz.html';
+  return;
+}
+
+const subs = subjects[user.cls] || subjects['9'];
+subs.forEach(s => {
+  const opt = document.createElement('option');
+  opt.value = s;
+  opt.textContent = s;
+  sel.appendChild(opt);
+});
 
   const params = new URLSearchParams(window.location.search);
   const subFromURL = params.get('subject');
@@ -370,12 +405,7 @@ function showBreakdown() {
   });
 }
 
-function saveQuizResult(score, total, percent) {
-  const saved = localStorage.getItem('ilmpath_user');
-  if (!saved) return;
-  const user = JSON.parse(saved);
-  if (!user.quizHistory) user.quizHistory = [];
-
+async function saveQuizResult(score, total, percent) {
   const result = {
     subject:   quizMeta.subject,
     chapter:   quizMeta.chapter,
@@ -385,13 +415,29 @@ function saveQuizResult(score, total, percent) {
     date:      new Date().toLocaleDateString('en-PK')
   };
 
-  user.quizHistory = user.quizHistory.filter(q =>
-    !(q.subject === quizMeta.subject &&
-      q.chapter == quizMeta.chapter &&
-      q.level === quizMeta.level)
-  );
-  user.quizHistory.push(result);
-  localStorage.setItem('ilmpath_user', JSON.stringify(user));
+  // Save to Firebase
+  const uid = localStorage.getItem('ilmpath_uid');
+  if (uid) {
+    try {
+      await firebaseSaveQuiz(uid, result);
+    } catch (err) {
+      console.log('Error saving quiz:', err);
+    }
+  }
+
+  // Also save locally as backup
+  const saved = localStorage.getItem('ilmpath_user');
+  if (saved) {
+    const user = JSON.parse(saved);
+    if (!user.quizHistory) user.quizHistory = [];
+    user.quizHistory = user.quizHistory.filter(q =>
+      !(q.subject === result.subject &&
+        q.chapter == result.chapter &&
+        q.level === result.level)
+    );
+    user.quizHistory.push(result);
+    localStorage.setItem('ilmpath_user', JSON.stringify(user));
+  }
 }
 
 function retryQuiz() {
