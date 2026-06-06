@@ -2,24 +2,6 @@ import { firebaseSignup } from './firebase-config.js';
 
 let selectedMedium = 'english';
 
-window.addEventListener('DOMContentLoaded', () => {
-  const board = localStorage.getItem('ilmpath_board') || 'none';
-  const cls = localStorage.getItem('ilmpath_class') || '9';
-
-  const boardNames = {
-    punjab: 'Punjab Board', sindh: 'Sindh Board',
-    kpk: 'KPK Board', balochistan: 'Balochistan Board', federal: 'Federal Board'
-  };
-
-  const el = document.getElementById('selected-text');
-  if (el) {
-    if (cls === 'other') {
-      el.textContent = 'Senior Student — PDF Quiz access';
-    } else {
-      el.textContent = (boardNames[board] || board) + ' — Class ' + cls;
-    }
-  }
-});
 
 function setMedium(m) {
   selectedMedium = m;
@@ -135,4 +117,37 @@ async function doSignup() {
 
     document.getElementById('err-email').textContent = errMsg;
   }
+
+// Add event listeners after DOM loads
+window.addEventListener('DOMContentLoaded', () => {
+  const board = localStorage.getItem('ilmpath_board') || 'none';
+  const cls = localStorage.getItem('ilmpath_class') || '9';
+
+  const boardNames = {
+    punjab: 'Punjab Board', sindh: 'Sindh Board',
+    kpk: 'KPK Board', balochistan: 'Balochistan Board', federal: 'Federal Board'
+  };
+
+  const el = document.getElementById('selected-text');
+  if (el) {
+    if (cls === 'other') {
+      el.textContent = 'Senior Student — PDF Quiz access';
+    } else {
+      el.textContent = (boardNames[board] || board) + ' — Class ' + cls;
+    }
+  }
+
+  // Add input listeners
+  document.getElementById('inp-name').addEventListener('input', validate);
+  document.getElementById('inp-email').addEventListener('input', validate);
+  document.getElementById('inp-pass').addEventListener('input', () => { validate(); checkStrength(); });
+  document.getElementById('inp-pass2').addEventListener('input', validate);
+
+  // Eye button
+  document.getElementById('eye-btn').addEventListener('click', togglePass);
+
+  // Signup button
+  document.getElementById('signup-btn').addEventListener('click', doSignup);
+});
+
 }
