@@ -186,12 +186,10 @@ function showQuizHistory(history) {
 
 function logout() {
   firebaseLogout();
-
-
-  window.addEventListener('DOMContentLoaded', () => {
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) logoutBtn.addEventListener('click', logout);
-    initDashboard();
-  });  
-
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) logoutBtn.addEventListener('click', logout);
+  initDashboard();
+});
