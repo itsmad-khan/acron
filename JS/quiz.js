@@ -5,13 +5,13 @@ let userAnswers = [];
 let quizMeta = {};
 
 function initQuiz() {
-  const loggedIn = localStorage.getItem('ilmpath_logged_in');
+  const loggedIn = localStorage.getItem('acron_logged_in');
   if (!loggedIn) {
     window.location.href = 'login.html';
     return;
   }
 
-  const saved = localStorage.getItem('ilmpath_user');
+  const saved = localStorage.getItem('acron_user');
   if (!saved) return;
   const user = JSON.parse(saved);
 
@@ -141,7 +141,7 @@ function checkOldQuiz() {
     return;
   }
 
-  const saved = localStorage.getItem('ilmpath_user');
+  const saved = localStorage.getItem('acron_user');
   if (!saved) return;
   const user = JSON.parse(saved);
   const history = user.quizHistory || [];
@@ -248,7 +248,7 @@ function loadOldQuiz() {
   const chapter = document.getElementById('sel-chapter').value;
   const level = quizMeta.level;
 
-  const saved = localStorage.getItem('ilmpath_user');
+  const saved = localStorage.getItem('acron_user');
   if (!saved) return;
   const user = JSON.parse(saved);
   const history = user.quizHistory || [];
@@ -415,7 +415,7 @@ async function saveQuizResult(score, total, percent) {
   };
 
   // Save to Firebase
-  const uid = localStorage.getItem('ilmpath_uid');
+  const uid = localStorage.getItem('acron_uid');
   if (uid) {
     try {
       await firebaseSaveQuiz(uid, result);
@@ -425,7 +425,7 @@ async function saveQuizResult(score, total, percent) {
   }
 
   // Also save locally as backup
-  const saved = localStorage.getItem('ilmpath_user');
+  const saved = localStorage.getItem('acron_user');
   if (saved) {
     const user = JSON.parse(saved);
     if (!user.quizHistory) user.quizHistory = [];
@@ -435,7 +435,7 @@ async function saveQuizResult(score, total, percent) {
         q.level === result.level)
     );
     user.quizHistory.push(result);
-    localStorage.setItem('ilmpath_user', JSON.stringify(user));
+    localStorage.setItem('acron_user', JSON.stringify(user));
   }
 }
 
