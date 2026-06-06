@@ -1,3 +1,15 @@
+// Fetch API key from Vercel backend
+async function loadAPIKey() {
+  try {
+    const res = await fetch('/api/config');
+    const data = await res.json();
+    window.ACRON_API_KEY = data.apiKey;
+  } catch (err) {
+    console.log('Could not load API key');
+  }
+}
+loadAPIKey();
+
 // ===== STAR BACKGROUND =====
 function generateStars() {
     const container = document.getElementById('stars');
