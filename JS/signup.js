@@ -138,16 +138,18 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Add input listeners
-  document.getElementById('inp-name').addEventListener('input', validate);
-  document.getElementById('inp-email').addEventListener('input', validate);
-  document.getElementById('inp-pass').addEventListener('input', () => { validate(); checkStrength(); });
-  document.getElementById('inp-pass2').addEventListener('input', validate);
+  const nameInp = document.getElementById('inp-name');
+  const emailInp = document.getElementById('inp-email');
+  const passInp = document.getElementById('inp-pass');
+  const pass2Inp = document.getElementById('inp-pass2');
+  const eyeBtn = document.getElementById('eye-btn');
+  const signupBtn = document.getElementById('signup-btn');
 
-  // Eye button
-  document.getElementById('eye-btn').addEventListener('click', togglePass);
-
-  // Signup button
-  document.getElementById('signup-btn').addEventListener('click', doSignup);
+  if (nameInp) nameInp.addEventListener('input', validate);
+  if (emailInp) emailInp.addEventListener('input', validate);
+  if (passInp) passInp.addEventListener('input', () => { validate(); checkStrength(); });
+  if (pass2Inp) pass2Inp.addEventListener('input', validate);
+  if (eyeBtn) eyeBtn.addEventListener('click', togglePass);
+  if (signupBtn) signupBtn.addEventListener('click', doSignup);
 });
-
 }
