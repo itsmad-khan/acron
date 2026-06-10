@@ -215,11 +215,11 @@ console.log('Reader user:', user);
   
       federal: {
         '9':  {
-          'Physics':          'https://www.fbise.edu.pk/books/9th/Physics-9.pdf',
-          'Chemistry':        'https://www.fbise.edu.pk/books/9th/Chemistry-9.pdf',
-          'Biology':          'https://www.fbise.edu.pk/books/9th/Biology-9.pdf',
-          'Mathematics':      'https://www.fbise.edu.pk/books/9th/Mathematics-9.pdf',
-          'English':          'https://www.fbise.edu.pk/books/9th/English-9.pdf',
+          'Physics':          'https://drive.google.com/file/d/1BpgKxJU89aepwrSsvsF0M61kn1L3r4Yy/preview',
+          'Chemistry':        'https://drive.google.com/file/d/1F7iOH7rIEtoHsfTxKsdKoXrTeHZXtDYv/preview',
+          'Biology':          'https://drive.google.com/file/d/1CPA5cGolkCNMWMaOqkZxETs-Md04wav0/preview',
+          'Mathematics':      'https://drive.google.com/file/d/1TY-ODfEhnaqN_l-58PtTvGH-auqX2gHz/preview',
+          'English':          'https://drive.google.com/file/d/1ntNMhZHp7YFU4kvH6pTWC-Qvgk1ZOBrb/preview',
           'Urdu':             'https://www.fbise.edu.pk/books/9th/Urdu-9.pdf',
           'Islamiat':         'https://www.fbise.edu.pk/books/9th/Islamiat-9.pdf',
           'Pakistan Studies': 'https://www.fbise.edu.pk/books/9th/PakistanStudies-9.pdf',
