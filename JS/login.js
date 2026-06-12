@@ -40,21 +40,37 @@ async function doLogin() {
       btn.removeAttribute('disabled');
       btn.innerHTML = '<span>Log in</span>';
       errEl.innerHTML = `
-        Email not verified yet. 
-        Please check your inbox and click the verification link.
-        <br/>
-        <button onclick="resendVerification('${email}', '${pass}')" 
-          style="color:#a78bfa;background:none;border:none;cursor:pointer;
-          font-size:12px;margin-top:6px;text-decoration:underline;font-family:Nunito,sans-serif">
+        <div style="margin-bottom:8px">
+          Email not verified yet. Please check your inbox and spam folder.
+        </div>
+        <button id="resend-btn" style="
+          color:#a78bfa;background:rgba(108,99,255,0.1);
+          border:1px solid rgba(108,99,255,0.3);
+          padding:6px 14px;border-radius:8px;
+          cursor:pointer;font-size:12px;
+          font-family:Nunito,sans-serif;font-weight:700;
+        ">
           Resend verification email
         </button>
       `;
+    
+      // Add resend button listener
+      setTimeout(() => {
+        const resendBtn = document.getElementById('resend-btn');
+        if (resendBtn) {
+          resendBtn.addEventListener('click', async () => {
+            try {
+              await sendEmailVerification(user);
+              resendBtn.textContent = 'Email sent! Check your inbox.';
+              resendBtn.style.color = '#34d399';
+            } catch (e) {
+              resendBtn.textContent = 'Could not send. Try again later.';
+            }
+          });
+        }
+      }, 100);
       return;
     }
-
-    resetLoginAttempts(email);
-    saveLastLogin();
-
     async function resendVerification(email, pass) {
       try {
         const user = await firebaseLogin(email, pass);

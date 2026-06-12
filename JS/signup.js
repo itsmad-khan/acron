@@ -121,12 +121,17 @@ async function doSignup() {
     btn.removeAttribute('disabled');
     btn.innerHTML = '<span>Create my account</span>';
 
-    const errMsg =
-      err.code === 'auth/email-already-in-use' ? 'This email is already registered. Please log in.' :
-      err.code === 'auth/weak-password' ? 'Password is too weak. Use at least 6 characters.' :
-      'Error creating account. Please try again.';
-
-    document.getElementById('err-email').textContent = errMsg;
+    if (err.code === 'auth/email-already-in-use') {
+      document.getElementById('err-email').innerHTML = `
+        This email is already registered. 
+        <a href="login.html" style="color:#a78bfa;font-weight:700">Log in here</a>
+        or check your inbox for the verification email.
+      `;
+    } else if (err.code === 'auth/weak-password') {
+      document.getElementById('err-email').textContent = 'Password is too weak. Use at least 6 characters.';
+    } else {
+      document.getElementById('err-email').textContent = 'Error creating account. Please try again.';
+    }
   }
 }
 
