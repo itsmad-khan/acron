@@ -22,6 +22,8 @@ async function initDashboard() {
 
     // Save fresh data to localStorage
     localStorage.setItem('acron_user', JSON.stringify({...user, uid}));
+    localStorage.setItem('acron_board', user.board || 'none');
+    localStorage.setItem('acron_class', user.cls || 'other');
 
     // Show last login
     const lastLoginEl = document.getElementById('last-login-time');
@@ -92,6 +94,8 @@ async function initDashboard() {
 }
 
 function loadSubjects(board, cls) {
+  if (!cls || cls === '') cls = 'other';
+  if (!board || board === '') board = 'none';
   const subjects = {
     '9':  ['Physics','Chemistry','Biology','Mathematics','English'],
     '10': ['Physics','Chemistry','Biology','Mathematics','English'],
