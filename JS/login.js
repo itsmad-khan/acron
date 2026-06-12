@@ -1,4 +1,4 @@
-import { firebaseLogin } from './firebase-config.js';
+import { firebaseLogin, sendEmailVerification } from './firebase-config.js';
 
 function togglePass() {
   const inp = document.getElementById('inp-pass');
@@ -34,8 +34,36 @@ async function doLogin() {
 
   try {
     const user = await firebaseLogin(email, pass);
+
+    // Check if email is verified
+    if (!user.emailVerified) {
+      btn.removeAttribute('disabled');
+      btn.innerHTML = '<span>Log in</span>';
+      errEl.innerHTML = `
+        Email not verified yet. 
+        Please check your inbox and click the verification link.
+        <br/>
+        <button onclick="resendVerification('${email}', '${pass}')" 
+          style="color:#a78bfa;background:none;border:none;cursor:pointer;
+          font-size:12px;margin-top:6px;text-decoration:underline;font-family:Nunito,sans-serif">
+          Resend verification email
+        </button>
+      `;
+      return;
+    }
+
     resetLoginAttempts(email);
     saveLastLogin();
+
+    async function resendVerification(email, pass) {
+      try {
+        const user = await firebaseLogin(email, pass);
+        await sendEmailVerification(user);
+        alert('Verification email sent! Please check your inbox.');
+      } catch (err) {
+        alert('Could not resend email. Please try again.');
+      }
+    }
 
     localStorage.setItem('acron_logged_in', 'true');
     localStorage.setItem('acron_uid', user.uid);

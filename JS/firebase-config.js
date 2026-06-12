@@ -1,6 +1,6 @@
 // Import Firebase
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js';
 import { getDatabase, ref, set, get, update } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
 
 const firebaseConfig = {
@@ -23,6 +23,10 @@ async function firebaseSignup(name, email, password, board, cls, medium) {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
 
+  // Send verification email
+  await sendEmailVerification(user);
+
+  // Save user data to database
   await set(ref(db, 'users/' + user.uid), {
     name: name,
     email: email,
@@ -30,6 +34,7 @@ async function firebaseSignup(name, email, password, board, cls, medium) {
     cls: cls,
     medium: medium,
     createdAt: new Date().toISOString(),
+    emailVerified: false,
     quizHistory: [],
     chaptersRead: []
   });
@@ -99,5 +104,5 @@ export {
   firebaseSignup, firebaseLogin, firebaseLogout,
   firebaseGetUser, firebaseSaveQuiz,
   firebaseUpdateProfile, firebaseSaveChapter,
-  onAuthReady
+  onAuthReady, sendEmailVerification
 };

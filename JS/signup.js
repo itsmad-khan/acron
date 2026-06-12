@@ -82,7 +82,55 @@ async function doSignup() {
   btn.innerHTML = '<span>Creating account...</span>';
 
   try {
-    const user = await firebaseSignup(name, email, pass, board, cls, selectedMedium);
+    try {
+      const user = await firebaseSignup(name, email, pass, board, cls, selectedMedium);
+  
+      // Send verification email
+      await sendEmailVerification(user);
+  
+      // Save basic info locally
+      localStorage.setItem('ilmpath_uid', user.uid);
+      localStorage.setItem('ilmpath_user', JSON.stringify({
+        name, email, board, cls,
+        medium: selectedMedium,
+        uid: user.uid
+      }));
+  
+      saveLastLogin();
+  
+      // Show verification message instead of going to dashboard
+      const btn = document.getElementById('signup-btn');
+      btn.removeAttribute('disabled');
+      btn.innerHTML = '<span>Create my account</span>';
+  
+      const msg = document.getElementById('success-msg');
+      msg.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <div>
+          <div style="font-weight:800">Account created!</div>
+          <div style="font-size:12px;margin-top:3px">
+            We sent a verification email to <strong>${email}</strong>
+            Please check your inbox and click the link before logging in.
+          </div>
+        </div>
+      `;
+      msg.classList.add('show');
+      msg.style.alignItems = 'flex-start';
+  
+    } catch (err) {
+      console.log('Signup error:', err);
+      btn.removeAttribute('disabled');
+      btn.innerHTML = '<span>Create my account</span>';
+  
+      const errMsg =
+        err.code === 'auth/email-already-in-use' ? 'This email is already registered. Please log in.' :
+        err.code === 'auth/weak-password' ? 'Password is too weak. Use at least 6 characters.' :
+        'Error creating account. Please try again.';
+  
+      document.getElementById('err-email').textContent = errMsg;
+    }
 
     localStorage.setItem('acron_logged_in', 'true');
     localStorage.setItem('acron_uid', user.uid);
