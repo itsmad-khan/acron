@@ -1014,3 +1014,52 @@ body.light-theme .theme-toggle:hover {
 body.light-theme .device-warning {
   background: rgba(251,191,36,0.08);
 }
+
+/* ===== MOTIVATIONAL QUOTE ===== */
+.quote-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(108,99,255,0.08);
+  border: 1px solid rgba(108,99,255,0.2);
+  border-radius: 16px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.quote-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.quote-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quote-en {
+  font-size: 13px;
+  font-weight: 600;
+  color: #a78bfa;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.quote-author {
+  font-size: 12px;
+  color: #6c63ff;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+body.light-theme .quote-author { color: #6c63ff; }
+
+body.light-theme .quote-banner {
+  background: rgba(108,99,255,0.06);
+  border-color: rgba(108,99,255,0.15);
+}
+
+body.light-theme .quote-en { color: #6c63ff; }
+body.light-theme .quote-ur { color: #8b5cf6; }
