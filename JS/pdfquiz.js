@@ -153,10 +153,19 @@ Format:
   {
     "q": "Question here?",
     "options": ["Option A", "Option B", "Option C", "Option D"],
-    "answer": 0
+    "answer": 0,
+    "explanation": "Brief explanation of why the correct answer is right.",
+    "wrong_explanations": [
+      "Why option A is wrong",
+      "Why option B is wrong",
+      "Why option C is wrong",
+      "Why option D is wrong"
+    ]
   }
 ]
-"answer" is the index (0,1,2,3) of the correct option.`;
+"answer" is the index (0,1,2,3) of the correct option.
+"wrong_explanations" has 4 items. For the correct option write empty string "".
+Keep explanations short — maximum 2 sentences.`;
 
   const response = await fetch('/api/quiz', {
     method: 'POST',
@@ -197,6 +206,9 @@ function renderPDFQuestion() {
   document.getElementById('pdf-quiz-label').textContent =
     'PDF Quiz — ' + pdfLevel + ' level';
   document.getElementById('pdf-question-text').textContent = q.q;
+  // Remove old explanation
+  const oldExp = document.getElementById('pdf-explanation');
+  if (oldExp) oldExp.remove();
 
   const optList = document.getElementById('pdf-options-list');
   optList.innerHTML = '';
@@ -240,6 +252,55 @@ function selectPDFAnswer(index) {
     if (i === q.answer) btn.classList.add('correct');
     else if (i === index) btn.classList.add('wrong');
   });
+
+  // Show explanation
+  showPDFExplanation(q, index);
+}
+
+function showPDFExplanation(q, selectedIndex) {
+  const old = document.getElementById('pdf-explanation');
+  if (old) old.remove();
+
+  const isCorrect = selectedIndex === q.answer;
+  const explanation = q.explanation || '';
+  const wrongExp = q.wrong_explanations ? q.wrong_explanations[selectedIndex] : '';
+
+  const div = document.createElement('div');
+  div.id = 'pdf-explanation';
+  div.className = 'quiz-explanation ' + (isCorrect ? 'exp-correct' : 'exp-wrong');
+
+  if (isCorrect) {
+    div.innerHTML = `
+      <div class="exp-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Correct!
+      </div>
+      <div class="exp-text">${explanation}</div>
+    `;
+  } else {
+    div.innerHTML = `
+      <div class="exp-header wrong-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        Wrong answer
+      </div>
+      ${wrongExp ? `<div class="exp-text">${wrongExp}</div>` : ''}
+      <div class="exp-correct-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Correct answer: ${q.options[q.answer]}
+      </div>
+      <div class="exp-text">${explanation}</div>
+    `;
+  }
+
+  const optList = document.getElementById('pdf-options-list');
+  if (optList) optList.after(div);
 }
 
 function pdfNextQ() {
