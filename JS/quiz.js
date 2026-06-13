@@ -470,7 +470,60 @@ async function saveQuizResult(score, total, percent) {
   }
 }
 
-function retryQuiz() {
+function showRetryOptions() {
+  const resultCard = document.querySelector('.results-card');
+  if (!resultCard) return;
+
+  // Remove old retry options if exist
+  const old = document.getElementById('retry-options');
+  if (old) old.remove();
+
+  const div = document.createElement('div');
+  div.id = 'retry-options';
+  div.innerHTML = `
+    <div style="
+      background:rgba(108,99,255,0.08);
+      border:1px solid rgba(108,99,255,0.2);
+      border-radius:14px;
+      padding:1.2rem;
+      margin-top:1rem;
+      text-align:center;
+    ">
+      <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:6px">
+        What do you want to do?
+      </div>
+      <div style="font-size:13px;color:#9ca3af;margin-bottom:1rem">
+        آپ کیا کرنا چاہتے ہیں؟
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button onclick="retrySameQuiz()" style="
+          padding:10px 20px;border-radius:10px;
+          background:rgba(108,99,255,0.15);
+          border:1px solid rgba(108,99,255,0.3);
+          color:#a78bfa;font-size:13px;font-weight:700;
+          font-family:Nunito,sans-serif;cursor:pointer;
+        ">
+          🔄 Retry same quiz
+        </button>
+        <button onclick="newQuiz()" style="
+          padding:10px 20px;border-radius:10px;
+          background:linear-gradient(135deg,#6c63ff,#a855f7);
+          border:none;
+          color:#fff;font-size:13px;font-weight:700;
+          font-family:Nunito,sans-serif;cursor:pointer;
+        ">
+          ✨ Generate new quiz
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Add after result buttons
+  const resultBtns = document.querySelector('.result-btns');
+  if (resultBtns) resultBtns.after(div);
+}
+
+function retrySameQuiz() {
   currentQ = 0;
   userAnswers = new Array(currentQuiz.length).fill(null);
   document.getElementById('quiz-results').style.display = 'none';

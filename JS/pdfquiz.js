@@ -367,7 +367,55 @@ function submitPDFQuiz() {
   });
 }
 
-function pdfRetry() {
+function showPDFRetryOptions() {
+  const old = document.getElementById('pdf-retry-options');
+  if (old) old.remove();
+
+  const div = document.createElement('div');
+  div.id = 'pdf-retry-options';
+  div.innerHTML = `
+    <div style="
+      background:rgba(108,99,255,0.08);
+      border:1px solid rgba(108,99,255,0.2);
+      border-radius:14px;
+      padding:1.2rem;
+      margin-top:1rem;
+      text-align:center;
+    ">
+      <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:6px">
+        What do you want to do?
+      </div>
+      <div style="font-size:13px;color:#9ca3af;margin-bottom:1rem">
+        آپ کیا کرنا چاہتے ہیں؟
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button onclick="pdfRetrySame()" style="
+          padding:10px 20px;border-radius:10px;
+          background:rgba(108,99,255,0.15);
+          border:1px solid rgba(108,99,255,0.3);
+          color:#a78bfa;font-size:13px;font-weight:700;
+          font-family:Nunito,sans-serif;cursor:pointer;
+        ">
+          🔄 Retry same quiz
+        </button>
+        <button onclick="pdfNewQuiz()" style="
+          padding:10px 20px;border-radius:10px;
+          background:linear-gradient(135deg,#34d399,#059669);
+          border:none;
+          color:#fff;font-size:13px;font-weight:700;
+          font-family:Nunito,sans-serif;cursor:pointer;
+        ">
+          ✨ Upload new PDF
+        </button>
+      </div>
+    </div>
+  `;
+
+  const resultBtns = document.querySelector('.result-btns');
+  if (resultBtns) resultBtns.after(div);
+}
+
+function pdfRetrySame() {
   pdfCurrentQ = 0;
   pdfAnswers = new Array(pdfQuiz.length).fill(null);
   document.getElementById('pdf-results').style.display = 'none';
