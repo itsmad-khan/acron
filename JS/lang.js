@@ -169,7 +169,7 @@ function generateStars() {
 function toggleTheme() {
   const isLight = document.body.classList.contains('light-theme');
   if (isLight) {
-    document.body.classList.remove('light-theme');
+    document.body.classList.remove('light-mode');
     localStorage.setItem('acron_theme', 'dark');
     document.getElementById('theme-icon-dark').style.display = 'block';
     document.getElementById('theme-icon-light').style.display = 'none';
