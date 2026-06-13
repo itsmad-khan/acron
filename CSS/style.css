@@ -1064,13 +1064,39 @@ body.light-theme .quote-banner {
 body.light-theme .quote-en { color: #6c63ff; }
 body.light-theme .quote-ur { color: #8b5cf6; }
 
-/* ===== QUIZ EXPLANATION ===== */
-.quiz-explanation {
-  border-radius: 12px;
-  padding: 14px 16px;
-  margin-top: 12px;
-  animation: fadeIn 0.3s ease;
+/* ===== OPTION EXPLANATIONS ===== */
+.option-explanation {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 8px 12px 8px 44px;
+  margin-top: -4px;
+  margin-bottom: 6px;
+  border-radius: 0 0 10px 10px;
+  animation: fadeIn 0.25s ease;
 }
+
+.opt-exp-correct {
+  background: rgba(52,211,153,0.08);
+  color: #34d399;
+  border: 1px solid rgba(52,211,153,0.2);
+  border-top: none;
+}
+
+.opt-exp-wrong {
+  background: rgba(248,113,113,0.06);
+  color: #f87171;
+  border: 1px solid rgba(248,113,113,0.15);
+  border-top: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+body.light-theme .opt-exp-correct { background: rgba(52,211,153,0.06); }
+body.light-theme .opt-exp-wrong { background: rgba(248,113,113,0.04); }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }

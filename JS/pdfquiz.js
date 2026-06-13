@@ -139,33 +139,33 @@ async function fetchPDFQuizFromAI(text, level, count) {
 
   const prompt = `You are a quiz maker. Based on the following text, generate ${count} ${levelDesc[level]} multiple choice questions.
 
-TEXT:
-${text}
-
-Rules:
-- Questions must be based ONLY on the text above
-- Do not use outside knowledge
-- Return ONLY a JSON array
-- No extra text or markdown
-
-Format:
-[
-  {
-    "q": "Question here?",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "answer": 0,
-    "explanation": "Brief explanation of why the correct answer is right.",
-    "wrong_explanations": [
-      "Why option A is wrong",
-      "Why option B is wrong",
-      "Why option C is wrong",
-      "Why option D is wrong"
-    ]
-  }
-]
-"answer" is the index (0,1,2,3) of the correct option.
-"wrong_explanations" has 4 items. For the correct option write empty string "".
-Keep explanations short — maximum 2 sentences.`;
+  TEXT:
+  ${text}
+  
+  Rules:
+  - Questions must be based ONLY on the text above
+  - Do not use outside knowledge
+  - Return ONLY a JSON array
+  - No extra text or markdown
+  
+  Format:
+  [
+    {
+      "q": "Question here?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "answer": 0,
+      "explanations": [
+        "Why option A is correct or wrong — one sentence.",
+        "Why option B is correct or wrong — one sentence.",
+        "Why option C is correct or wrong — one sentence.",
+        "Why option D is correct or wrong — one sentence."
+      ]
+    }
+  ]
+  "answer" is the index (0,1,2,3) of the correct option.
+  "explanations" has exactly 4 items — one for each option.
+  For correct option start with ✓ Correct: and for wrong options start with ✗ Wrong:
+  Keep each explanation to one sentence.`;
 
   const response = await fetch('/api/quiz', {
     method: 'POST',
@@ -206,9 +206,8 @@ function renderPDFQuestion() {
   document.getElementById('pdf-quiz-label').textContent =
     'PDF Quiz — ' + pdfLevel + ' level';
   document.getElementById('pdf-question-text').textContent = q.q;
-  // Remove old explanation
-  const oldExp = document.getElementById('pdf-explanation');
-  if (oldExp) oldExp.remove();
+  // Remove old explanations
+  document.querySelectorAll('.option-explanation').forEach(e => e.remove());
 
   const optList = document.getElementById('pdf-options-list');
   optList.innerHTML = '';
