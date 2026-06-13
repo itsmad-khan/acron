@@ -256,51 +256,6 @@ function selectPDFAnswer(index) {
   showPDFExplanation(q, index);
 }
 
-function showPDFExplanation(q, selectedIndex) {
-  const old = document.getElementById('pdf-explanation');
-  if (old) old.remove();
-
-  const isCorrect = selectedIndex === q.answer;
-  const explanation = q.explanation || '';
-  const wrongExp = q.wrong_explanations ? q.wrong_explanations[selectedIndex] : '';
-
-  const div = document.createElement('div');
-  div.id = 'pdf-explanation';
-  div.className = 'quiz-explanation ' + (isCorrect ? 'exp-correct' : 'exp-wrong');
-
-  if (isCorrect) {
-    div.innerHTML = `
-      <div class="exp-header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        Correct!
-      </div>
-      <div class="exp-text">${explanation}</div>
-    `;
-  } else {
-    div.innerHTML = `
-      <div class="exp-header wrong-header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-        Wrong answer
-      </div>
-      ${wrongExp ? `<div class="exp-text">${wrongExp}</div>` : ''}
-      <div class="exp-correct-label">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        Correct answer: ${q.options[q.answer]}
-      </div>
-      <div class="exp-text">${explanation}</div>
-    `;
-  }
-
-  const optList = document.getElementById('pdf-options-list');
-  if (optList) optList.after(div);
-}
 
 function pdfNextQ() {
   if (pdfCurrentQ < pdfQuiz.length - 1) {
