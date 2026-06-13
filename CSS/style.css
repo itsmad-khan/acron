@@ -1063,3 +1063,59 @@ body.light-theme .quote-banner {
 
 body.light-theme .quote-en { color: #6c63ff; }
 body.light-theme .quote-ur { color: #8b5cf6; }
+
+/* ===== QUIZ EXPLANATION ===== */
+.quiz-explanation {
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.exp-correct {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.25);
+}
+
+.exp-wrong {
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.25);
+}
+
+.exp-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #34d399;
+  margin-bottom: 8px;
+}
+
+.wrong-header {
+  color: #f87171;
+}
+
+.exp-text {
+  font-size: 13px;
+  color: #9ca3af;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.exp-correct-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #34d399;
+  margin-bottom: 6px;
+}
+
+body.light-theme .exp-text { color: #555; }

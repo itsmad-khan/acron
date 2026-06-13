@@ -7,618 +7,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="CSS/style.css"/>
-<style>
-  /* ── Design Tokens ── */
-  :root {
-    --bg:           #0d0f1a;
-    --bg-2:         #131629;
-    --surface:      #1a1e32;
-    --surface-2:    #1f2438;
-    --border:       rgba(255,255,255,0.07);
-    --border-hover: rgba(255,255,255,0.13);
-
-    --text-primary:   #f0f2ff;
-    --text-secondary: #8b92b8;
-    --text-muted:     #525878;
-
-    --accent:       #7c6cf0;
-    --accent-light: #9d90f5;
-    --teal:         #34d399;
-    --amber:        #fbbf24;
-    --rose:         #f87171;
-
-    --radius-sm:  10px;
-    --radius-md:  14px;
-    --radius-lg:  18px;
-    --radius-xl:  24px;
-
-    --shadow-sm:  0 2px 8px rgba(0,0,0,0.25);
-    --shadow-md:  0 4px 20px rgba(0,0,0,0.35);
-    --shadow-lg:  0 8px 40px rgba(0,0,0,0.45);
-
-    --transition: 200ms cubic-bezier(0.4,0,0.2,1);
-  }
-
-  /* ── Reset & Base ── */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Nunito', sans-serif;
-    background: var(--bg);
-    color: var(--text-primary);
-    min-height: 100vh;
-    line-height: 1.6;
-    font-size: 16px;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ── Stars background ── */
-  .stars {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-  }
-
-  /* ── Navbar ── */
-  .navbar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 28px;
-    height: 64px;
-    background: rgba(13,15,26,0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-  }
-
-  .logo-icon {
-    width: 38px;
-    height: 38px;
-    background: linear-gradient(135deg, var(--accent), #5b4dd4);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(124,108,240,0.4);
-  }
-
-  .logo-name {
-    display: block;
-    font-size: 17px;
-    font-weight: 800;
-    color: var(--text-primary);
-    line-height: 1.1;
-    letter-spacing: -0.3px;
-  }
-
-  .logo-urdu {
-    display: block;
-    font-size: 11px;
-    color: var(--text-secondary);
-    line-height: 1;
-  }
-
-  .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .theme-toggle,
-  .nav-icon-btn,
-  .logout-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 9px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background var(--transition), color var(--transition), border-color var(--transition);
-    text-decoration: none;
-    flex-shrink: 0;
-  }
-
-  .theme-toggle:hover,
-  .nav-icon-btn:hover,
-  .logout-btn:hover {
-    background: var(--surface-2);
-    color: var(--text-primary);
-    border-color: var(--border-hover);
-  }
-
-  .logout-btn {
-    color: var(--rose);
-    border-color: rgba(248,113,113,0.2);
-  }
-
-  .logout-btn:hover {
-    background: rgba(248,113,113,0.1);
-    border-color: rgba(248,113,113,0.4);
-    color: var(--rose);
-  }
-
-  .lang-switch {
-    display: flex;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    padding: 3px;
-    gap: 2px;
-  }
-
-  .lang-btn {
-    padding: 4px 12px;
-    border-radius: 6px;
-    border: none;
-    background: transparent;
-    color: var(--text-secondary);
-    font-family: 'Nunito', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background var(--transition), color var(--transition);
-  }
-
-  .lang-btn.active {
-    background: var(--accent);
-    color: #fff;
-  }
-
-  .user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent-light));
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 14px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(124,108,240,0.35);
-    border: 2px solid rgba(124,108,240,0.3);
-  }
-
-  /* ── Main layout ── */
-  .dash-main {
-    position: relative;
-    z-index: 1;
-    max-width: 1160px;
-    margin: 0 auto;
-    padding: 28px 24px 60px;
-  }
-
-  /* ── Device / login bar ── */
-  .device-warning {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(251,191,36,0.1);
-    border: 1px solid rgba(251,191,36,0.25);
-    border-radius: var(--radius-sm);
-    padding: 10px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--amber);
-    margin-bottom: 12px;
-  }
-
-  .last-login-bar {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 5px 12px;
-    border-radius: 20px;
-  }
-
-  /* ── Dashboard header ── */
-  .dash-header {
-    margin-bottom: 28px;
-  }
-
-  .dash-header-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .dash-greeting {
-    font-size: clamp(22px, 4vw, 28px);
-    font-weight: 800;
-    color: var(--text-primary);
-    line-height: 1.2;
-    letter-spacing: -0.5px;
-  }
-
-  .dash-info {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-top: 4px;
-    font-weight: 500;
-  }
-
-  .streak-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(251,191,36,0.12);
-    border: 1px solid rgba(251,191,36,0.25);
-    color: var(--amber);
-    padding: 7px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 700;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  /* ── Stat cards ── */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 28px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 22px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    opacity: 0;
-    transition: opacity var(--transition);
-  }
-
-  .stat-card:hover {
-    border-color: var(--border-hover);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-  }
-
-  .stat-card:hover::before { opacity: 1; }
-
-  .stat-card:nth-child(1)::before { background: linear-gradient(90deg, var(--accent), var(--accent-light)); }
-  .stat-card:nth-child(2)::before { background: linear-gradient(90deg, var(--teal), #6ee7b7); }
-  .stat-card:nth-child(3)::before { background: linear-gradient(90deg, var(--amber), #fde68a); }
-
-  .stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .stat-icon.purple { background: rgba(124,108,240,0.15); color: var(--accent-light); }
-  .stat-icon.teal   { background: rgba(52,211,153,0.15);  color: var(--teal); }
-  .stat-icon.amber  { background: rgba(251,191,36,0.15);  color: var(--amber); }
-
-  .stat-num {
-    font-size: 32px;
-    font-weight: 800;
-    color: var(--text-primary);
-    line-height: 1;
-    letter-spacing: -1px;
-  }
-
-  .stat-label {
-    font-size: 13px;
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
-
-  /* ── Two-column layout ── */
-  .dash-sections {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 20px;
-    align-items: start;
-  }
-
-  /* ── Section titles ── */
-  .section-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 14px;
-  }
-
-  /* ── Subject list ── */
-  .subjects-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .subject-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 16px 20px;
-    text-decoration: none;
-    color: var(--text-primary);
-    font-weight: 600;
-    font-size: 15px;
-    transition: background var(--transition), border-color var(--transition), transform var(--transition);
-    cursor: pointer;
-    min-height: 56px; /* touch target */
-  }
-
-  .subject-item:hover {
-    background: var(--surface-2);
-    border-color: var(--border-hover);
-    transform: translateX(3px);
-  }
-
-  .subject-item-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .subject-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .subject-arrow {
-    color: var(--text-muted);
-    transition: color var(--transition), transform var(--transition);
-  }
-
-  .subject-item:hover .subject-arrow {
-    color: var(--text-secondary);
-    transform: translateX(3px);
-  }
-
-  /* ── Right panel ── */
-  .dash-right {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  /* ── Quiz history / empty state ── */
-  .quiz-history {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-    min-height: 140px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    color: var(--text-muted);
-    text-align: center;
-    padding: 16px;
-  }
-
-  .empty-state p {
-    font-size: 13px;
-    font-weight: 500;
-    max-width: 200px;
-    line-height: 1.5;
-  }
-
-  /* ── Quick links ── */
-  .quick-links-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .quick-link-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 13px 16px;
-    color: var(--text-secondary);
-    font-size: 13px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background var(--transition), border-color var(--transition), color var(--transition);
-    min-height: 48px;
-    cursor: pointer;
-  }
-
-  .quick-link-btn:hover {
-    background: var(--surface-2);
-    border-color: var(--border-hover);
-    color: var(--text-primary);
-  }
-
-  /* ── Quick quiz card ── */
-  .quick-quiz-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-  }
-
-  .qq-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-  }
-
-  .qq-sub {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-bottom: 14px;
-  }
-
-  .qq-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 12px 16px;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, var(--accent), #5b4dd4);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 700;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: opacity var(--transition), transform var(--transition), box-shadow var(--transition);
-    box-shadow: 0 4px 14px rgba(124,108,240,0.35);
-    min-height: 48px;
-  }
-
-  .qq-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(124,108,240,0.45);
-  }
-
-  .qq-btn:active { transform: translateY(0); }
-
-  .qq-btn.pdf-btn {
-    background: linear-gradient(135deg, #34d399, #059669);
-    box-shadow: 0 4px 14px rgba(52,211,153,0.3);
-    margin-top: 10px;
-  }
-
-  .qq-btn.pdf-btn:hover {
-    box-shadow: 0 6px 20px rgba(52,211,153,0.4);
-  }
-
-  /* ── Responsive ── */
-  @media (max-width: 900px) {
-    .dash-sections {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .navbar { padding: 0 16px; }
-    .dash-main { padding: 20px 16px 48px; }
-    .stats-row { grid-template-columns: 1fr; gap: 10px; }
-    .stat-card { flex-direction: row; align-items: center; padding: 16px 18px; gap: 14px; }
-    .stat-num { font-size: 24px; }
-    .lang-switch { display: none; }
-    .nav-right { gap: 6px; }
-  }
-
-  /* ── Light mode ── */
-  body.light-mode {
-    --bg:           #f4f6fb;
-    --bg-2:         #eef0f7;
-    --surface:      #ffffff;
-    --surface-2:    #f0f2fa;
-    --border:       rgba(0,0,0,0.08);
-    --border-hover: rgba(0,0,0,0.14);
-    --text-primary:   #1a1d2e;
-    --text-secondary: #5a6080;
-    --text-muted:     #9ba3c0;
-  }
-
-  /* ── Reduced motion ── */
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { transition: none !important; animation: none !important; }
-  }
-
-  /* ── Focus rings (accessibility) ── */
-  :focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
-    border-radius: 4px;
-  }
-</style>
 </head>
 <body>
 
 <div class="stars" id="stars"></div>
 
-<!-- Skip link for keyboard users -->
-<a href="#main-content" style="position:absolute;left:-9999px;top:8px;z-index:999;padding:8px 16px;background:var(--accent);color:#fff;border-radius:8px;font-weight:700;text-decoration:none" 
-   onfocus="this.style.left='8px'" onblur="this.style.left='-9999px'">Skip to main content</a>
-
-<nav class="navbar" role="navigation" aria-label="Main navigation">
-  <a href="dashboard.html" class="logo" aria-label="Acron home">
-    <div class="logo-icon" aria-hidden="true">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-        <path d="M2 17l10 5 10-5"/>
-        <path d="M2 12l10 5 10-5"/>
-      </svg>
-    </div>
+<nav class="navbar">
+  <div class="logo">
+    <div class="logo-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
     <div>
       <span class="logo-name">Acron</span>
       <span class="logo-urdu">علم کی راہ</span>
     </div>
-  </a>
-
+  </div>
   <div class="nav-right">
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" 
-            title="Switch theme" aria-label="Toggle light/dark theme">
-      <svg id="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Switch theme">
+      <svg id="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
       </svg>
-      <svg id="theme-icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none" aria-hidden="true">
+      <svg id="theme-icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
         <circle cx="12" cy="12" r="5"/>
         <line x1="12" y1="1" x2="12" y2="3"/>
         <line x1="12" y1="21" x2="12" y2="23"/>
@@ -630,27 +37,24 @@
         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
       </svg>
     </button>
-
-    <div class="lang-switch" role="group" aria-label="Language selection">
-      <button class="lang-btn active" onclick="setLang('en')" id="btn-en" aria-pressed="true">English</button>
-      <button class="lang-btn" onclick="setLang('ur')" id="btn-ur" aria-pressed="false">اردو</button>
+    <div class="lang-switch">
+      <button class="lang-btn active" onclick="setLang('en')" id="btn-en">English</button>
+      <button class="lang-btn" onclick="setLang('ur')" id="btn-ur">اردو</button>
     </div>
-
-    <div class="user-avatar" id="user-avatar" aria-label="User avatar" role="img">A</div>
-
-    <a href="progress.html" class="nav-icon-btn" title="My Progress" aria-label="My Progress">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <div class="user-avatar" id="user-avatar">A</div>
+    <a href="progress.html" class="nav-icon-btn" title="My Progress">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
     </a>
-    <a href="profile.html" class="nav-icon-btn" title="My Profile" aria-label="My Profile">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <a href="profile.html" class="nav-icon-btn" title="My Profile">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
         <circle cx="12" cy="7" r="4"/>
       </svg>
     </a>
-    <button class="logout-btn" id="logout-btn" aria-label="Log out">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <button class="logout-btn" id="logout-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
         <polyline points="16 17 21 12 16 7"/>
         <line x1="21" y1="12" x2="9" y2="12"/>
@@ -659,154 +63,115 @@
   </div>
 </nav>
 
-<main class="dash-main" id="main-content">
+<main class="dash-main">
 
-  <!-- Device warning -->
-  <div class="device-warning" id="device-warning" style="display:none" role="alert">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-      <line x1="12" y1="9" x2="12" y2="13"/>
-      <line x1="12" y1="17" x2="12.01" y2="17"/>
-    </svg>
-    New login detected on a different device. Was this you?
-    <button onclick="document.getElementById('device-warning').style.display='none'"
-            style="background:none;border:none;color:var(--amber);cursor:pointer;font-weight:700;margin-left:auto;padding:4px;border-radius:4px"
-            aria-label="Dismiss warning">✕</button>
-  </div>
-
-  <!-- Dashboard header -->
   <div class="dash-header">
 
     <div class="quote-banner" id="quote-banner">
       <div class="quote-icon">💡</div>
       <div class="quote-text" id="quote-text"></div>
     </div>
-    <div class="last-login-bar" id="last-login-bar" aria-live="polite">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+
+    <div class="device-warning" id="device-warning" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      New login detected on a different device. Was this you?
+      <button onclick="document.getElementById('device-warning').style.display='none'" style="background:none;border:none;color:#fbbf24;cursor:pointer;font-weight:700;margin-left:auto">✕</button>
+    </div>
+  
+    <div class="last-login-bar" id="last-login-bar">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
       </svg>
       <span>Last login: <span id="last-login-time">—</span></span>
     </div>
-
-    <div class="dash-header-row">
-      <div>
-        <h1 class="dash-greeting" id="dash-greeting">Good morning, Ahmed! 👋</h1>
-        <p class="dash-info" id="dash-info">Balochistan Board — Class 12</p>
-      </div>
-      <div class="streak-badge" aria-label="3 day learning streak">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-        </svg>
-        <span id="streak-count">3 day streak</span>
-      </div>
+  
+    <div>
+      <h1 class="dash-greeting" id="dash-greeting">Good morning, Ahmed! </h1>
+      <p class="dash-info" id="dash-info">Balochistan board -Class 12</p>
+    </div>
+    <div class="streak-badge">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span id="streak-count">3 day streak</span>
     </div>
   </div>
 
-  <!-- Stats row -->
-  <div class="stats-row" role="region" aria-label="Your statistics">
+  <div class="stats-row">
     <div class="stat-card">
-      <div class="stat-icon purple" aria-hidden="true">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 11l3 3L22 4"/>
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-        </svg>
+      <div class="stat-icon purple">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       </div>
-      <div class="stat-num" id="stat-quizzes" aria-label="Quizzes taken: 0">0</div>
+      <div class="stat-num" id="stat-quizzes">0</div>
       <div class="stat-label" id="lbl-quizzes">Quizzes taken</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon teal" aria-hidden="true">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
+      <div class="stat-icon teal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       </div>
-      <div class="stat-num" id="stat-avg" aria-label="Average score: not yet available">—</div>
+      <div class="stat-num" id="stat-avg">—</div>
       <div class="stat-label" id="lbl-avg">Average score</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon amber" aria-hidden="true">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-        </svg>
+      <div class="stat-icon amber">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
       </div>
-      <div class="stat-num" id="stat-chapters" aria-label="Chapters read: 0">0</div>
+      <div class="stat-num" id="stat-chapters">0</div>
       <div class="stat-label" id="lbl-chapters">Chapters read</div>
     </div>
   </div>
 
-  <!-- Two-column sections -->
   <div class="dash-sections">
-
-    <!-- Left: subjects -->
-    <div class="dash-left" role="region" aria-label="Your subjects">
-      <h2 class="section-title" id="txt-subjects">Your subjects</h2>
-      <div class="subjects-list" id="subjects-list">
-        <!-- Populated by dashboard.js — example structure kept for reference:
-        <a href="subject.html?id=physics" class="subject-item">
-          <div class="subject-item-left">
-            <span class="subject-dot" style="background:#818cf8"></span>
-            <span>Physics</span>
-          </div>
-          <svg class="subject-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-        </a>
-        -->
+    <div class="dash-left">
+      <div class="section-head">
+        <h2 class="section-title" id="txt-subjects">Your subjects</h2>
       </div>
+      <div class="subjects-list" id="subjects-list"></div>
     </div>
 
-    <!-- Right panel -->
     <div class="dash-right">
-
-      <!-- Recent quizzes -->
-      <div role="region" aria-label="Recent quizzes">
+      <div class="section-head">
         <h2 class="section-title" id="txt-recent">Recent quizzes</h2>
-        <div class="quiz-history" id="quiz-history">
-          <div class="empty-state" role="status">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-              <path d="M9 11l3 3L22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-            </svg>
-            <p id="txt-no-quiz">No quizzes yet. Pick a subject and start!</p>
-          </div>
+      </div>
+      <div class="quiz-history" id="quiz-history">
+        <div class="empty-state">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <p id="txt-no-quiz">No quizzes yet. Pick a subject and start!</p>
         </div>
       </div>
 
-      <!-- Quick links -->
       <div class="quick-links-row">
         <a href="progress.html" class="quick-link-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
           My Progress
         </a>
         <a href="profile.html" class="quick-link-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
           </svg>
           My Profile
         </a>
       </div>
-
-      <!-- Quick quiz card -->
-      <div class="quick-quiz-card" role="region" aria-label="Quick quiz">
+      <div class="quick-quiz-card">
         <div class="qq-title" id="qq-title">Quick quiz</div>
         <div class="qq-sub" id="qq-sub">Test yourself right now</div>
         <a href="quiz.html" class="qq-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-          </svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           <span id="txt-start-quiz">Start a quiz</span>
         </a>
-        <a href="pdfquiz.html" class="qq-btn pdf-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <a href="pdfquiz.html" class="qq-btn" style="margin-top:10px;background:linear-gradient(135deg,#34d399,#059669)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
           </svg>
           <span>PDF Quiz</span>
         </a>
       </div>
-
     </div>
   </div>
 </main>

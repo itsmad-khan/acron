@@ -1,4 +1,5 @@
 import { firebaseSaveQuiz } from './firebase-config.js';
+
 let currentQuiz = [];
 let currentQ = 0;
 let userAnswers = [];
@@ -23,47 +24,20 @@ function initQuiz() {
   };
 
   const sel = document.getElementById('sel-subject');
-if (!sel) return;
+  if (!sel) return;
 
-// If other/senior redirect to PDF quiz
-if (user.cls === 'other') {
-  document.getElementById('quiz-setup').style.display = 'none';
-  document.getElementById('quiz-main-wrap') && 
-  (document.getElementById('quiz-main-wrap').innerHTML = `
-    <div style="
-      text-align:center; padding:3rem;
-      font-family:Nunito,sans-serif;
-    ">
-      <div style="font-size:48px;margin-bottom:1rem">📄</div>
-      <h2 style="color:#fff;font-size:20px;font-weight:800;margin-bottom:8px">
-        You are a Senior Student!
-      </h2>
-      <p style="color:#9ca3af;font-size:14px;margin-bottom:2rem">
-        Please use PDF Quiz to generate questions from your own material.
-      </p>
-      <a href="pdfquiz.html" style="
-        display:inline-flex;align-items:center;gap:8px;
-        background:linear-gradient(135deg,#6c63ff,#a855f7);
-        color:#fff;text-decoration:none;
-        padding:14px 28px;border-radius:14px;
-        font-size:15px;font-weight:700;
-      ">
-        Go to PDF Quiz
-      </a>
-    </div>
-  `);
+  if (user.cls === 'other') {
+    window.location.href = 'pdfquiz.html';
+    return;
+  }
 
-  // Better approach — just redirect
-  window.location.href = 'pdfquiz.html';
-  return;
-}
-const subs = subjects[user.cls] || subjects['9'];
-subs.forEach(s => {
-  const opt = document.createElement('option');
-  opt.value = s;
-  opt.textContent = s;
-  sel.appendChild(opt);
-});
+  const subs = subjects[user.cls] || subjects['9'];
+  subs.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    sel.appendChild(opt);
+  });
 
   const params = new URLSearchParams(window.location.search);
   const subFromURL = params.get('subject');
@@ -131,13 +105,13 @@ function checkOldQuiz() {
   const subject = document.getElementById('sel-subject').value;
   const chapter = document.getElementById('sel-chapter').value;
   const level = quizMeta.level;
-  const prompt = document.getElementById('old-quiz-prompt');
-  if (!prompt) return;
+  const promptEl = document.getElementById('old-quiz-prompt');
+  if (!promptEl) return;
 
   checkGenBtn();
 
   if (!subject || !chapter || !level) {
-    prompt.style.display = 'none';
+    promptEl.style.display = 'none';
     return;
   }
 
@@ -153,12 +127,12 @@ function checkOldQuiz() {
   );
 
   if (old) {
-    prompt.style.display = 'flex';
+    promptEl.style.display = 'flex';
     const meta = document.getElementById('old-quiz-meta');
     if (meta) meta.textContent = subject + ' Ch.' + chapter +
       ' — ' + old.level + ' — Score: ' + old.score + '/' + old.total;
   } else {
-    prompt.style.display = 'none';
+    promptEl.style.display = 'none';
   }
 }
 
@@ -196,26 +170,33 @@ async function fetchQuestionsFromAI(subject, chapter, level, count) {
     high:   'hard exam level analytical questions, multiple choice'
   };
 
-  const prompt = `Generate ${count} ${levelDesc[level]} quiz questions for Pakistani students studying ${subject}, Chapter ${chapter}.
+  const prompt = `Generate ${count} ${levelDesc[level]} multiple choice quiz questions for Pakistani students studying ${subject}, Chapter ${chapter}.
 
 Return ONLY a JSON array. No extra text. No markdown. Format:
 [
   {
     "q": "Question text here?",
     "options": ["Option A", "Option B", "Option C", "Option D"],
-    "answer": 0
+    "answer": 0,
+    "explanation": "Brief explanation of why the correct answer is right.",
+    "wrong_explanations": [
+      "Why option A is wrong (if A is wrong)",
+      "Why option B is wrong (if B is wrong)",
+      "Why option C is wrong (if C is wrong)",
+      "Why option D is wrong (if D is wrong)"
+    ]
   }
 ]
-"answer" is the index (0,1,2,3) of the correct option.`;
+"answer" is the index (0,1,2,3) of the correct option.
+"wrong_explanations" has 4 items — one for each option. For the correct option write empty string "".
+Keep explanations short — maximum 2 sentences each.`;
 
   let response;
 
   try {
     response = await fetch('/api/quiz', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: prompt })
     });
   } catch (fetchError) {
@@ -237,8 +218,6 @@ Return ONLY a JSON array. No extra text. No markdown. Format:
   }
 
   const text = data.choices[0].message.content;
-  console.log('AI text:', text);
-
   const clean = text.replace(/```json|```/g, '').trim();
   return JSON.parse(clean);
 }
@@ -287,6 +266,10 @@ function renderQuestion() {
     quizMeta.subject + ' — Chapter ' + quizMeta.chapter + ' — ' + quizMeta.level;
   document.getElementById('question-text').textContent = q.q;
 
+  // Remove old explanation
+  const oldExp = document.getElementById('quiz-explanation');
+  if (oldExp) oldExp.remove();
+
   const optList = document.getElementById('options-list');
   optList.innerHTML = '';
   const letters = ['A', 'B', 'C', 'D'];
@@ -329,6 +312,54 @@ function selectAnswer(index) {
     if (i === q.answer) btn.classList.add('correct');
     else if (i === index) btn.classList.add('wrong');
   });
+
+  showExplanation(q, index);
+}
+
+function showExplanation(q, selectedIndex) {
+  const old = document.getElementById('quiz-explanation');
+  if (old) old.remove();
+
+  const isCorrect = selectedIndex === q.answer;
+  const explanation = q.explanation || '';
+  const wrongExp = q.wrong_explanations ? q.wrong_explanations[selectedIndex] : '';
+
+  const div = document.createElement('div');
+  div.id = 'quiz-explanation';
+  div.className = 'quiz-explanation ' + (isCorrect ? 'exp-correct' : 'exp-wrong');
+
+  if (isCorrect) {
+    div.innerHTML = `
+      <div class="exp-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Correct!
+      </div>
+      <div class="exp-text">${explanation}</div>
+    `;
+  } else {
+    div.innerHTML = `
+      <div class="exp-header wrong-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        Wrong answer
+      </div>
+      ${wrongExp ? `<div class="exp-text">${wrongExp}</div>` : ''}
+      <div class="exp-correct-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Correct answer: ${q.options[q.answer]}
+      </div>
+      <div class="exp-text">${explanation}</div>
+    `;
+  }
+
+  const optList = document.getElementById('options-list');
+  if (optList) optList.after(div);
 }
 
 function nextQ() {
@@ -395,8 +426,10 @@ function showBreakdown() {
         <div class="bi-q">${i + 1}. ${q.q}</div>
         ${!correct ?
           `<div class="bi-ans wrong-ans">Your answer: ${yourAns}</div>
-           <div class="bi-ans correct-ans">Correct: ${correctAns}</div>` :
-          `<div class="bi-ans correct-ans">✓ Correct</div>`
+           <div class="bi-ans correct-ans">Correct: ${correctAns}</div>
+           ${q.explanation ? `<div class="bi-ans" style="color:#9ca3af;margin-top:4px">💡 ${q.explanation}</div>` : ''}` :
+          `<div class="bi-ans correct-ans">✓ Correct</div>
+           ${q.explanation ? `<div class="bi-ans" style="color:#9ca3af;margin-top:4px">💡 ${q.explanation}</div>` : ''}`
         }
       </div>
     `;
@@ -414,7 +447,6 @@ async function saveQuizResult(score, total, percent) {
     date:      new Date().toLocaleDateString('en-PK')
   };
 
-  // Save to Firebase
   const uid = localStorage.getItem('acron_uid');
   if (uid) {
     try {
@@ -424,7 +456,6 @@ async function saveQuizResult(score, total, percent) {
     }
   }
 
-  // Also save locally as backup
   const saved = localStorage.getItem('acron_user');
   if (saved) {
     const user = JSON.parse(saved);
