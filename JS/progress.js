@@ -1,39 +1,49 @@
+import { firebaseGetUser } from './firebase-config.js';
+
 let allHistory = [];
 
-function initProgress() {
-  // Check if student is logged in
+async function initProgress() {
   const loggedIn = localStorage.getItem('acron_logged_in');
   if (!loggedIn) {
     window.location.href = 'login.html';
     return;
   }
 
-  // Get student data
-  const saved = localStorage.getItem('acron_user');
-  if (!saved) return;
-  const user = JSON.parse(saved);
-
-  allHistory = user.quizHistory || [];
-
-  // Fill overall stats
-  document.getElementById('prog-total').textContent = allHistory.length;
-  document.getElementById('prog-chapters').textContent =
-    (user.chaptersRead || []).length;
-
-  if (allHistory.length > 0) {
-    const avg = Math.round(
-      allHistory.reduce((a, b) => a + b.percent, 0) / allHistory.length
-    );
-    const best = Math.max(...allHistory.map(q => q.percent));
-    document.getElementById('prog-avg').textContent = avg + '%';
-    document.getElementById('prog-best').textContent = best + '%';
+  const uid = localStorage.getItem('acron_uid');
+  if (!uid) {
+    window.location.href = 'login.html';
+    return;
   }
 
-  // Show subject bars
-  showSubjectBars();
+  try {
+    const user = await firebaseGetUser(uid);
+    if (!user) return;
 
-  // Show full history
-  showHistory(allHistory);
+    const history = user.quizHistory || [];
+    allHistory = Array.isArray(history) ? history : Object.values(history);
+
+    const chapters = user.chaptersRead || [];
+    const chapArr = Array.isArray(chapters) ? chapters : Object.values(chapters);
+
+    // Fill overall stats
+    document.getElementById('prog-total').textContent = allHistory.length;
+    document.getElementById('prog-chapters').textContent = chapArr.length;
+
+    if (allHistory.length > 0) {
+      const avg = Math.round(
+        allHistory.reduce((a, b) => a + b.percent, 0) / allHistory.length
+      );
+      const best = Math.max(...allHistory.map(q => q.percent));
+      document.getElementById('prog-avg').textContent = avg + '%';
+      document.getElementById('prog-best').textContent = best + '%';
+    }
+
+    showSubjectBars();
+    showHistory(allHistory);
+
+  } catch (err) {
+    console.log('Progress error:', err);
+  }
 }
 
 function showSubjectBars() {
@@ -52,11 +62,9 @@ function showSubjectBars() {
   container.innerHTML = '';
 
   subjects.forEach(sub => {
-    // Get all quizzes for this subject
     const subQuizzes = allHistory.filter(q => q.subject === sub);
 
     if (subQuizzes.length === 0) {
-      // Show empty bar
       const row = document.createElement('div');
       row.className = 'subject-bar-row';
       row.innerHTML = `
@@ -73,7 +81,6 @@ function showSubjectBars() {
       return;
     }
 
-    // Calculate average for this subject
     const avg = Math.round(
       subQuizzes.reduce((a, b) => a + b.percent, 0) / subQuizzes.length
     );
@@ -86,7 +93,7 @@ function showSubjectBars() {
         <span class="bar-count">${subQuizzes.length} quiz${subQuizzes.length > 1 ? 'zes' : ''}</span>
       </div>
       <div class="bar-track">
-        <div class="bar-fill" style="width:0%;background:${colors[sub]}" 
+        <div class="bar-fill" style="width:0%;background:${colors[sub]}"
           data-width="${avg}%"></div>
       </div>
       <span class="bar-pct" style="color:${colors[sub]}">${avg}%</span>
@@ -94,7 +101,6 @@ function showSubjectBars() {
     container.appendChild(row);
   });
 
-  // Animate bars after a short delay
   setTimeout(() => {
     document.querySelectorAll('.bar-fill').forEach(bar => {
       bar.style.width = bar.getAttribute('data-width') || '0%';
@@ -116,7 +122,6 @@ function showHistory(list) {
 
   emptyEl.style.display = 'none';
 
-  // Show newest first
   const sorted = [...list].reverse();
 
   sorted.forEach(q => {
@@ -135,13 +140,10 @@ function showHistory(list) {
     item.innerHTML = `
       <div class="hfi-left">
         <div class="hfi-subject">${q.subject}</div>
-        <div class="hfi-meta">
-          Chapter ${q.chapter} — ${q.date}
-        </div>
+        <div class="hfi-meta">Chapter ${q.chapter} — ${q.date}</div>
       </div>
       <div class="hfi-middle">
-        <span class="hfi-level"
-          style="background:${lc.bg};color:${lc.color}">
+        <span class="hfi-level" style="background:${lc.bg};color:${lc.color}">
           ${q.level}
         </span>
       </div>
@@ -155,7 +157,6 @@ function showHistory(list) {
 }
 
 function filterHistory(subject, btn) {
-  // Update active button
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 
@@ -165,3 +166,19 @@ function filterHistory(subject, btn) {
     showHistory(allHistory.filter(q => q.subject === subject));
   }
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+  initProgress();
+
+  // Fix filter buttons since they use onclick
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    const onclick = btn.getAttribute('onclick');
+    if (onclick) {
+      btn.removeAttribute('onclick');
+      btn.addEventListener('click', () => {
+        const match = onclick.match(/filterHistory\('(.+?)',\s*this\)/);
+        if (match) filterHistory(match[1], btn);
+      });
+    }
+  });
+});
