@@ -246,14 +246,21 @@ function selectPDFAnswer(index) {
 
   const q = pdfQuiz[pdfCurrentQ];
   const btns = document.querySelectorAll('#pdf-options-list .option-btn');
+
   btns.forEach((btn, i) => {
     btn.classList.add('answered');
     if (i === q.answer) btn.classList.add('correct');
     else if (i === index) btn.classList.add('wrong');
-  });
 
-  // Show explanation
-  showPDFExplanation(q, index);
+    // Show explanation right next to each option
+    if (q.explanations && q.explanations[i]) {
+      const expDiv = document.createElement('div');
+      expDiv.className = 'option-explanation ' +
+        (i === q.answer ? 'opt-exp-correct' : 'opt-exp-wrong');
+      expDiv.textContent = q.explanations[i];
+      btn.after(expDiv);
+    }
+  });
 }
 
 
