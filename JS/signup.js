@@ -99,17 +99,33 @@ async function doSignup() {
     // Show verification message
     const msg = document.getElementById('success-msg');
     msg.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-      <div>
-        <div style="font-weight:800">Account created!</div>
-        <div style="font-size:12px;margin-top:3px">
-          We sent a verification email to <strong>${email}</strong>.
-          Please check your inbox and click the link before logging in.
-        </div>
-      </div>
-    `;
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+  <div>
+    <div style="font-weight:800;margin-bottom:6px">Account created! 🎉</div>
+    <div style="font-size:13px;margin-bottom:8px">
+      We sent a verification email to <strong>${email}</strong>
+    </div>
+    <div style="
+      background:rgba(251,191,36,0.1);
+      border:1px solid rgba(251,191,36,0.25);
+      border-radius:8px;
+      padding:8px 12px;
+      font-size:12px;
+      color:#fbbf24;
+      margin-bottom:6px;
+    ">
+      ⚠️ <strong>Important:</strong> The email may go to your 
+      <strong>Spam</strong> or <strong>Promotions</strong> folder.
+      Please check there if you do not see it in inbox!
+    </div>
+    <div style="font-size:12px;color:#9ca3af;">
+      After verifying your email — come back here and log in.
+    </div>
+    
+  </div>
+`;
     msg.classList.add('show');
     msg.style.alignItems = 'flex-start';
 
