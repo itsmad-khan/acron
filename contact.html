@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Acron — Contact Us</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="CSS/style.css"/>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<nav class="navbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <div>
+      <span class="logo-name">Acron</span>
+      <span class="logo-urdu">علم کی راہ</span>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="lang-switch">
+      <button class="lang-btn active" onclick="setLang('en')" id="btn-en">English</button>
+      <button class="lang-btn" onclick="setLang('ur')" id="btn-ur">اردو</button>
+    </div>
+    <a href="index.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Home
+    </a>
+  </div>
+</nav>
+
+<main style="position:relative;z-index:1;max-width:700px;margin:0 auto;padding:3rem 1.5rem">
+
+  <div style="text-align:center;margin-bottom:3rem">
+    <div style="font-size:48px;margin-bottom:1rem">📬</div>
+    <h1 style="font-size:32px;font-weight:800;color:#fff;margin-bottom:1rem">Contact Us</h1>
+    <p style="font-size:16px;color:#9ca3af;line-height:1.7">
+      We would love to hear from you!
+    </p>
+    <p style="font-size:14px;color:#6c63ff;direction:rtl;margin-top:8px">
+      ہم آپ سے سننا چاہتے ہیں
+    </p>
+  </div>
+
+  <!-- Contact options -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:2rem">
+
+    <div style="
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:16px;
+      padding:1.5rem;
+      text-align:center;
+    ">
+      <div style="font-size:32px;margin-bottom:10px">📧</div>
+      <div style="font-size:14px;font-weight:700;color:#a78bfa;margin-bottom:6px">Email</div>
+      <a href="mailto:acronlearning@gmail.com" style="
+        font-size:13px;color:#9ca3af;text-decoration:none;
+      ">support@acron.pk</a>
+      <div style="font-size:11px;color:#6b7280;margin-top:4px">
+        We reply within 24 hours
+      </div>
+    </div>
+
+    <div style="
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:16px;
+      padding:1.5rem;
+      text-align:center;
+    ">
+      <div style="font-size:32px;margin-bottom:10px">💬</div>
+      <div style="font-size:14px;font-weight:700;color:#a78bfa;margin-bottom:6px">WhatsApp</div>
+      <a href="https://wa.me//923364498552" style="
+        font-size:13px;color:#9ca3af;text-decoration:none;
+      ">+92 300 0000000</a>
+      <div style="font-size:11px;color:#6b7280;margin-top:4px">
+        Mon-Sat 9am to 9pm
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Contact form -->
+  <div style="
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px;
+    padding:2rem;
+    margin-bottom:2rem;
+  ">
+    <h2 style="font-size:18px;font-weight:800;color:#fff;margin-bottom:1.5rem">
+      Send us a message
+    </h2>
+
+    <div class="form-group">
+      <label class="form-label">Your name</label>
+      <div class="input-wrap">
+        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <input type="text" id="contact-name" class="form-input" placeholder="Ahmed Ali"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Your email</label>
+      <div class="input-wrap">
+        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+        <input type="email" id="contact-email" class="form-input" placeholder="your@email.com"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Subject</label>
+      <div class="input-wrap">
+        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"/>
+          <line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/>
+          <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        <select id="contact-subject" class="form-input" style="padding-left:40px">
+          <option value="">— Select subject —</option>
+          <option value="bug">Report a bug</option>
+          <option value="suggestion">Suggestion or feedback</option>
+          <option value="account">Account problem</option>
+          <option value="books">Book not loading</option>
+          <option value="quiz">Quiz problem</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Message</label>
+      <textarea id="contact-message" style="
+        width:100%;
+        background:rgba(255,255,255,0.05);
+        border:1px solid rgba(255,255,255,0.1);
+        border-radius:12px;
+        padding:12px 14px;
+        font-size:14px;
+        font-family:Nunito,sans-serif;
+        color:#e8e8f0;
+        resize:vertical;
+        min-height:120px;
+        transition:all 0.2s;
+      " placeholder="Write your message here..."></textarea>
+    </div>
+
+    <button onclick="sendMessage()" style="
+      width:100%;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      padding:14px;
+      background:linear-gradient(135deg,#6c63ff,#a855f7);
+      color:#fff;border:none;border-radius:14px;
+      font-size:15px;font-weight:700;
+      font-family:Nunito,sans-serif;
+      cursor:pointer;
+    ">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+      Send message
+    </button>
+
+    <div id="contact-success" style="
+      display:none;
+      align-items:center;gap:10px;
+      background:rgba(52,211,153,0.1);
+      border:1px solid rgba(52,211,153,0.25);
+      border-radius:12px;
+      padding:12px 16px;
+      color:#34d399;
+      font-size:14px;font-weight:600;
+      margin-top:1rem;
+    ">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      Message sent! We will reply within 24 hours.
+    </div>
+
+  </div>
+
+  <!-- FAQ -->
+  <div style="
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px;
+    padding:2rem;
+  ">
+    <h2 style="font-size:18px;font-weight:800;color:#fff;margin-bottom:1.5rem">
+      ❓ Common Questions
+    </h2>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-bottom:1px solid rgba(255,255,255,0.07);padding-bottom:14px">
+        <div style="font-size:14px;font-weight:700;color:#a78bfa;margin-bottom:6px">
+          Is Acron completely free?
+        </div>
+        <div style="font-size:13px;color:#9ca3af;line-height:1.6">
+          Yes! Acron is completely free for all students. No hidden charges.
+        </div>
+      </div>
+      <div style="border-bottom:1px solid rgba(255,255,255,0.07);padding-bottom:14px">
+        <div style="font-size:14px;font-weight:700;color:#a78bfa;margin-bottom:6px">
+          Which boards are supported?
+        </div>
+        <div style="font-size:13px;color:#9ca3af;line-height:1.6">
+          Punjab, Federal, Sindh, KPK and Balochistan boards are supported.
+        </div>
+      </div>
+      <div style="border-bottom:1px solid rgba(255,255,255,0.07);padding-bottom:14px">
+        <div style="font-size:14px;font-weight:700;color:#a78bfa;margin-bottom:6px">
+          I did not receive verification email. What to do?
+        </div>
+        <div style="font-size:13px;color:#9ca3af;line-height:1.6">
+          Please check your Spam folder and Promotions tab in Gmail. The email comes from Firebase/Google.
+        </div>
+      </div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#a78bfa;margin-bottom:6px">
+          Can I use Acron on my phone?
+        </div>
+        <div style="font-size:13px;color:#9ca3af;line-height:1.6">
+          Yes! Acron works perfectly on all phones, tablets and computers.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script src="JS/lang.js"></script>
+<script>
+  generateStars();
+
+  function sendMessage() {
+    const name = document.getElementById('contact-name').value.trim();
+    const email = document.getElementById('contact-email').value.trim();
+    const subject = document.getElementById('contact-subject').value;
+    const message = document.getElementById('contact-message').value.trim();
+
+    if (!name || !email || !subject || !message) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    // Open email client with message
+    const mailtoLink = `mailto:support@acron.pk?subject=${encodeURIComponent(subject + ' — ' + name)}&body=${encodeURIComponent('Name: ' + name + '\nEmail: ' + email + '\n\nMessage:\n' + message)}`;
+    window.location.href = mailtoLink;
+
+    // Show success
+    const success = document.getElementById('contact-success');
+    success.style.display = 'flex';
+  }
+</script>
+</body>
+</html>

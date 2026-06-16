@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Acron — About Us</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="CSS/style.css"/>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<nav class="navbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <div>
+      <span class="logo-name">Acron</span>
+      <span class="logo-urdu">علم کی راہ</span>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="lang-switch">
+      <button class="lang-btn active" onclick="setLang('en')" id="btn-en">English</button>
+      <button class="lang-btn" onclick="setLang('ur')" id="btn-ur">اردو</button>
+    </div>
+    <a href="index.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Home
+    </a>
+  </div>
+</nav>
+
+<main style="position:relative;z-index:1;max-width:800px;margin:0 auto;padding:3rem 1.5rem">
+
+  <div style="text-align:center;margin-bottom:3rem">
+    <div style="font-size:48px;margin-bottom:1rem">🎓</div>
+    <h1 style="font-size:32px;font-weight:800;color:#fff;margin-bottom:1rem">About Acron</h1>
+    <p style="font-size:16px;color:#9ca3af;line-height:1.7">
+      Pakistan's free AI-powered study platform for students
+    </p>
+    <p style="font-size:14px;color:#6c63ff;direction:rtl;margin-top:8px">
+      پاکستان کا مفت اے آئی تعلیمی پلیٹ فارم
+    </p>
+  </div>
+
+  <div style="
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px;
+    padding:2rem;
+    margin-bottom:1.5rem;
+  ">
+    <h2 style="font-size:20px;font-weight:800;color:#a78bfa;margin-bottom:1rem">
+      🌟 Our Mission
+    </h2>
+    <p style="font-size:15px;color:#d1d5db;line-height:1.8;margin-bottom:1rem">
+      Acron is built to make quality education accessible to every Pakistani student — 
+      completely free of charge. We believe every student deserves access to great 
+      study tools regardless of their financial situation.
+    </p>
+    <p style="font-size:14px;color:#6c63ff;direction:rtl;line-height:1.8">
+      ہمارا مقصد ہر پاکستانی طالب علم کو معیاری تعلیم تک مفت رسائی دینا ہے۔
+    </p>
+  </div>
+
+  <div style="
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px;
+    padding:2rem;
+    margin-bottom:1.5rem;
+  ">
+    <h2 style="font-size:20px;font-weight:800;color:#a78bfa;margin-bottom:1.5rem">
+      ✨ What We Offer
+    </h2>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:20px">📚</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#fff">Board Books Online</div>
+          <div style="font-size:13px;color:#9ca3af;margin-top:2px">
+            Read your board's textbooks online — Punjab, Federal, Sindh, KPK and Balochistan
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:20px">🤖</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#fff">AI Quiz Maker</div>
+          <div style="font-size:13px;color:#9ca3af;margin-top:2px">
+            Generate unlimited quizzes with AI — low, medium and high difficulty
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:20px">📄</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#fff">PDF Quiz</div>
+          <div style="font-size:13px;color:#9ca3af;margin-top:2px">
+            Upload any PDF and AI will create a quiz from it — perfect for university students
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <span style="font-size:20px">📊</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#fff">Progress Tracking</div>
+          <div style="font-size:13px;color:#9ca3af;margin-top:2px">
+            Track your quiz history and scores across all subjects
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px;
+    padding:2rem;
+    margin-bottom:1.5rem;
+  ">
+    <h2 style="font-size:20px;font-weight:800;color:#a78bfa;margin-bottom:1rem">
+      🏫 Who Can Use Acron?
+    </h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
+      <div style="background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.2);border-radius:12px;padding:1rem;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">👦</div>
+        <div style="font-size:14px;font-weight:700;color:#a78bfa">Class 9 & 10</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px">Matric students</div>
+      </div>
+      <div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:1rem;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">👧</div>
+        <div style="font-size:14px;font-weight:700;color:#34d399">Class 11 & 12</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px">FSc students</div>
+      </div>
+      <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:12px;padding:1rem;text-align:center">
+        <div style="font-size:24px;margin-bottom:6px">🎓</div>
+        <div style="font-size:14px;font-weight:700;color:#fbbf24">University</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px">Senior students</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px;
+    padding:2rem;
+    margin-bottom:1.5rem;
+  ">
+    <h2 style="font-size:20px;font-weight:800;color:#a78bfa;margin-bottom:1rem">
+      📍 About the Team
+    </h2>
+    <p style="font-size:15px;color:#d1d5db;line-height:1.8">
+      Acron is made with ❤️ in Pakistan. We are passionate about improving 
+      education for Pakistani students using the latest AI technology.
+    </p>
+    <p style="font-size:14px;color:#6c63ff;direction:rtl;margin-top:8px;line-height:1.8">
+      اکرون پاکستان میں محبت کے ساتھ بنایا گیا ہے۔
+    </p>
+  </div>
+
+  <div style="text-align:center;margin-top:2rem">
+    <a href="index.html" style="
+      display:inline-flex;align-items:center;gap:8px;
+      background:linear-gradient(135deg,#6c63ff,#a855f7);
+      color:#fff;text-decoration:none;
+      padding:14px 28px;border-radius:14px;
+      font-size:15px;font-weight:700;
+    ">
+      Start Learning Free
+    </a>
+  </div>
+
+</main>
+
+<script src="JS/lang.js"></script>
+<script>generateStars();</script>
+</body>
+</html>
