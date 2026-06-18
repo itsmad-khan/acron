@@ -391,6 +391,30 @@ function selectAnswer(index) {
   if (userAnswers[currentQ] !== null) return;
   userAnswers[currentQ] = index;
 
+  const q = currentQuiz[currentQ];
+  const btns = document.querySelectorAll('.option-btn');
+
+  btns.forEach((btn, i) => {
+    btn.classList.add('answered');
+    if (i === q.answer) btn.classList.add('correct');
+    else if (i === index) btn.classList.add('wrong');
+
+    // Show explanation right next to each option
+    if (q.explanations && q.explanations[i]) {
+      const expDiv = document.createElement('div');
+      expDiv.className = 'option-explanation ' +
+        (i === q.answer ? 'opt-exp-correct' : 'opt-exp-wrong');
+      expDiv.textContent = q.explanations[i];
+      btn.after(expDiv);
+    }
+  });
+}
+
+
+function selectAnswer(index) {
+  if (userAnswers[currentQ] !== null) return;
+  userAnswers[currentQ] = index;
+
   const q    = currentQuiz[currentQ];
   const btns = document.querySelectorAll('#options-list .option-btn');
   btns.forEach((btn, i) => {
