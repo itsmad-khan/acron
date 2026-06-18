@@ -40,6 +40,16 @@ function clearErrors() {
   ['err-name', 'err-email', 'err-pass', 'err-pass2'].forEach(id => setText(id, ''));
 }
 
+function escapeHTML(str) {
+  if (typeof str !== 'string') return String(str ?? '');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 /* ─────────────────────────────────────────
    Study medium toggle
 ───────────────────────────────────────── */
@@ -120,15 +130,11 @@ function validate() {
   let valid = true;
 
   if (name.length < 2) valid = false;
-
   if (!email.includes('@') || !email.includes('.')) valid = false;
-
-  if (pass.length < 6) {
-    valid = false;
-  }
+  if (pass.length < 6) valid = false;
 
   if (pass2 && pass !== pass2) {
-    setText('err-pass2', 'Passwords do not match.');
+    setText('err-pass2', 'Passwords do not match');
     valid = false;
   }
 
@@ -140,14 +146,26 @@ function validate() {
 }
 
 /* ─────────────────────────────────────────
-   Button state helpers
+   Button loading state
+   Works whether the HTML has the improved spinner markup
+   (.btn-spinner / .btn-text-wrap) or a plain <span> only.
 ───────────────────────────────────────── */
 function setLoading(on) {
   const btn = document.getElementById('signup-btn');
   if (!btn) return;
-  btn.classList.toggle('loading', on);
+
+  const spinner  = btn.querySelector('.btn-spinner');
+  const textWrap = btn.querySelector('.btn-text-wrap');
+
   btn.disabled = on;
   btn.setAttribute('aria-disabled', on ? 'true' : 'false');
+
+  if (spinner && textWrap) {
+    btn.classList.toggle('loading', on);
+  } else {
+    const span = btn.querySelector('span');
+    if (span) span.textContent = on ? 'Creating account...' : 'Create my account';
+  }
 }
 
 /* ─────────────────────────────────────────
@@ -179,7 +197,7 @@ async function doSignup() {
       uid: user.uid,
     }));
 
-    // saveLastLogin() is provided globally by security.js
+    // saveLastLogin() comes from security.js (loaded as a plain script)
     if (typeof saveLastLogin === 'function') saveLastLogin();
     else localStorage.setItem('acron_last_login', new Date().toISOString());
 
@@ -193,10 +211,10 @@ async function doSignup() {
     if (err.code === 'auth/email-already-in-use') {
       const el = document.getElementById('err-email');
       if (el) {
-        el.innerHTML = `This email is already registered. <a href="login.html" style="color:var(--accent-light);font-weight:700">Log in here</a> or check your inbox for the verification email.`;
+        el.innerHTML = `This email is already registered. <a href="login.html" style="color:var(--accent-light, #a78bfa);font-weight:700">Log in here</a> or check your inbox for the verification email.`;
       }
     } else if (err.code === 'auth/weak-password') {
-      setText('err-pass', 'Password is too weak. Use at least 6 characters.');
+      setText('err-email', 'Password is too weak. Use at least 6 characters.');
     } else if (err.code === 'auth/invalid-email') {
       setText('err-email', 'Please enter a valid email address.');
     } else if (err.code === 'auth/network-request-failed') {
@@ -208,35 +226,47 @@ async function doSignup() {
 }
 
 /* ─────────────────────────────────────────
-   Success message (after signup)
+   Success message — verification email sent
+   (Your original spam-folder warning, preserved exactly,
+   with the email value escaped for safety.)
 ───────────────────────────────────────── */
 function showVerificationSuccess(email) {
   const msg = document.getElementById('success-msg');
   if (!msg) return;
+
+  const safeEmail = escapeHTML(email);
 
   msg.innerHTML = `
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
       <polyline points="20 6 9 17 4 12"/>
     </svg>
     <div>
-      <div style="font-weight:800">Account created!</div>
-      <div style="font-size:12px;margin-top:3px;line-height:1.5">
-        We sent a verification email to <strong>${escapeHTML(email)}</strong>.
-        Please check your inbox (and spam folder) and click the link before logging in.
+      <div style="font-weight:800;margin-bottom:6px">Account created! 🎉</div>
+      <div style="font-size:13px;margin-bottom:8px">
+        We sent a verification email to <strong>${safeEmail}</strong>
+      </div>
+      <div style="
+        background:rgba(251,191,36,0.1);
+        border:1px solid rgba(251,191,36,0.25);
+        border-radius:8px;
+        padding:8px 12px;
+        font-size:12px;
+        color:#fbbf24;
+        margin-bottom:6px;
+      ">
+        ⚠️ <strong>Important:</strong> The email may go to your
+        <strong>Spam</strong> or <strong>Promotions</strong> folder.
+        Please check there if you do not see it in inbox!
+      </div>
+      <div style="font-size:12px;color:#9ca3af;">
+        After verifying your email — come back here and log in.
       </div>
     </div>`;
+
   msg.classList.add('show', 'visible');
   msg.style.alignItems = 'flex-start';
-}
-
-function escapeHTML(str) {
-  if (typeof str !== 'string') return String(str ?? '');
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  msg.setAttribute('role', 'status');
+  msg.setAttribute('aria-live', 'polite');
 }
 
 /* ─────────────────────────────────────────
