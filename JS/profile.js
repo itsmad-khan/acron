@@ -1,261 +1,346 @@
 import { firebaseGetUser, firebaseUpdateProfile } from './firebase-config.js';
 
+/* ─────────────────────────────────────────
+   Constants
+───────────────────────────────────────── */
+const BOARD_NAMES = {
+  punjab:      'Punjab Board',
+  sindh:       'Sindh Board',
+  kpk:         'KPK Board',
+  balochistan: 'Balochistan Board',
+  federal:     'Federal Board',
+};
+
+/* ─────────────────────────────────────────
+   State
+───────────────────────────────────────── */
 let profileMedium = 'english';
 
-async function initProfile() {
+/* ─────────────────────────────────────────
+   Helpers
+───────────────────────────────────────── */
+function requireAuth() {
   const loggedIn = localStorage.getItem('acron_logged_in');
-  if (!loggedIn) {
+  const uid      = localStorage.getItem('acron_uid');
+  if (!loggedIn || !uid) {
     window.location.href = 'login.html';
-    return;
+    return null;
   }
-
-  const uid = localStorage.getItem('acron_uid');
-  if (!uid) {
-    window.location.href = 'login.html';
-    return;
-  }
-
-  try {
-    const user = await firebaseGetUser(uid);
-    if (!user) return;
-
-    // Fill top card
-    const avatar = document.getElementById('profile-avatar');
-    if (avatar) avatar.textContent = user.name.charAt(0).toUpperCase();
-
-    const boardNames = {
-      punjab: 'Punjab Board', sindh: 'Sindh Board',
-      kpk: 'KPK Board', balochistan: 'Balochistan Board', federal: 'Federal Board'
-    };
-
-    const nameEl = document.getElementById('profile-name');
-    const emailEl = document.getElementById('profile-email');
-    const boardEl = document.getElementById('profile-board');
-
-    if (nameEl) nameEl.textContent = user.name;
-    if (emailEl) emailEl.textContent = user.email;
-    if (boardEl) boardEl.textContent = user.cls === 'other' ? 'Senior Student' :
-      (boardNames[user.board] || user.board) + ' — Class ' + user.cls;
-
-    // Fill mini stats
-    const history = user.quizHistory || [];
-    const quizArr = Array.isArray(history) ? history : Object.values(history);
-    const chapters = user.chaptersRead || [];
-    const chapArr = Array.isArray(chapters) ? chapters : Object.values(chapters);
-
-    const miniQuizzes = document.getElementById('mini-quizzes');
-    const miniChapters = document.getElementById('mini-chapters');
-    const miniAvg = document.getElementById('mini-avg');
-
-    if (miniQuizzes) miniQuizzes.textContent = quizArr.length;
-    if (miniChapters) miniChapters.textContent = chapArr.length;
-
-    if (quizArr.length > 0) {
-      const avg = Math.round(quizArr.reduce((a, b) => a + b.percent, 0) / quizArr.length);
-      if (miniAvg) miniAvg.textContent = avg + '%';
-    }
-
-    // Fill edit form
-    const editName = document.getElementById('edit-name');
-    const editEmail = document.getElementById('edit-email');
-    const editBoard = document.getElementById('edit-board');
-    const editClass = document.getElementById('edit-class');
-
-    if (editName) editName.value = user.name;
-    if (editEmail) editEmail.value = user.email;
-    if (editBoard) editBoard.value = user.board;
-    if (editClass) editClass.value = user.cls;
-
-    // Set medium
-    profileMedium = user.medium || 'english';
-    const medEn = document.getElementById('prof-med-en');
-    const medUr = document.getElementById('prof-med-ur');
-    if (medEn) medEn.classList.toggle('active', profileMedium === 'english');
-    if (medUr) medUr.classList.toggle('active', profileMedium === 'urdu');
-
-  } catch (err) {
-    console.log('Profile error:', err);
-  }
+  return uid;
 }
 
-function setProfileMedium(m) {
-  profileMedium = m;
-  document.getElementById('prof-med-en').classList.toggle('active', m === 'english');
-  document.getElementById('prof-med-ur').classList.toggle('active', m === 'urdu');
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
 }
 
-async function saveProfile() {
-  const name = document.getElementById('edit-name').value.trim();
-  const email = document.getElementById('edit-email').value.trim();
-  const board = document.getElementById('edit-board').value;
-  const cls = document.getElementById('edit-class').value;
+function getValue(id) {
+  return document.getElementById(id)?.value ?? '';
+}
 
-  if (!name || !email) {
-    alert('Please fill in your name and email.');
-    return;
-  }
+function toArray(val) {
+  if (!val) return [];
+  return Array.isArray(val) ? val : Object.values(val);
+}
 
-  const uid = localStorage.getItem('acron_uid');
+function formatBoard(board, cls) {
+  if (cls === 'other') return 'Senior Student';
+  return `${BOARD_NAMES[board] ?? board} — Class ${cls}`;
+}
+
+/** Show a success message element for 3 seconds */
+function flashSuccess(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('show', 'visible');
+  setTimeout(() => el.classList.remove('show', 'visible'), 3000);
+}
+
+/** Show an error in a field-error element */
+function showFieldError(id, msg) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = msg;
+}
+
+/* ─────────────────────────────────────────
+   Init
+───────────────────────────────────────── */
+async function initProfile() {
+  const uid = requireAuth();
   if (!uid) return;
 
   try {
-    // Save to Firebase
-    await firebaseUpdateProfile(uid, {
-      name, email, board, cls,
-      medium: profileMedium
-    });
+    const user = await firebaseGetUser(uid);
+    if (!user) { window.location.href = 'login.html'; return; }
 
-    // Update localStorage
-    const saved = localStorage.getItem('acron_user');
-    if (saved) {
-      const user = JSON.parse(saved);
-      user.name = name;
-      user.email = email;
-      user.board = board;
-      user.cls = cls;
-      user.medium = profileMedium;
-      localStorage.setItem('acron_user', JSON.stringify(user));
-    }
-
-    // Update top card
-    document.getElementById('profile-name').textContent = name;
-    document.getElementById('profile-email').textContent = email;
-    document.getElementById('profile-avatar').textContent = name.charAt(0).toUpperCase();
-
-    const boardNames = {
-      punjab: 'Punjab Board', sindh: 'Sindh Board',
-      kpk: 'KPK Board', balochistan: 'Balochistan Board', federal: 'Federal Board'
-    };
-    document.getElementById('profile-board').textContent = cls === 'other' ? 'Senior Student' :
-      (boardNames[board] || board) + ' — Class ' + cls;
-
-    // Show success
-    const msg = document.getElementById('save-success');
-    msg.classList.add('show');
-    setTimeout(() => msg.classList.remove('show'), 3000);
+    renderTopCard(user);
+    renderMiniStats(user);
+    populateForm(user);
 
   } catch (err) {
-    console.log('Save profile error:', err);
-    alert('Error saving profile. Please try again.');
+    console.error('[Profile] init:', err);
   }
 }
 
-async function changePassword() {
-  const oldPass = document.getElementById('old-pass').value;
-  const newPass = document.getElementById('new-pass').value;
-  const newPass2 = document.getElementById('new-pass2').value;
-  const errEl = document.getElementById('pass-error');
+/* ─────────────────────────────────────────
+   Render: top profile card
+───────────────────────────────────────── */
+function renderTopCard(user) {
+  setText('profile-avatar', user.name.charAt(0).toUpperCase());
+  setText('profile-name',   user.name);
+  setText('profile-email',  user.email);
+  setText('profile-board',  formatBoard(user.board, user.cls));
+}
 
-  errEl.textContent = '';
+/* ─────────────────────────────────────────
+   Render: mini stats
+───────────────────────────────────────── */
+function renderMiniStats(user) {
+  const quizArr = toArray(user.quizHistory);
+  const chapArr = toArray(user.chaptersRead);
 
-  if (!oldPass || !newPass || !newPass2) {
-    errEl.textContent = 'Please fill in all password fields.';
-    return;
+  setText('mini-quizzes',  quizArr.length);
+  setText('mini-chapters', chapArr.length);
+
+  if (quizArr.length > 0) {
+    const avg = Math.round(
+      quizArr.reduce((sum, q) => sum + (q.percent ?? 0), 0) / quizArr.length
+    );
+    setText('mini-avg', avg + '%');
+  } else {
+    setText('mini-avg', '—');
   }
+}
 
-  if (newPass.length < 6) {
-    errEl.textContent = 'New password must be at least 6 characters.';
-    return;
-  }
+/* ─────────────────────────────────────────
+   Render: edit form pre-fill
+───────────────────────────────────────── */
+function populateForm(user) {
+  const editName  = document.getElementById('edit-name');
+  const editEmail = document.getElementById('edit-email');
+  const editBoard = document.getElementById('edit-board');
+  const editClass = document.getElementById('edit-class');
 
-  if (newPass !== newPass2) {
-    errEl.textContent = 'New passwords do not match.';
-    return;
+  if (editName)  editName.value  = user.name  ?? '';
+  if (editEmail) editEmail.value = user.email ?? '';
+  if (editBoard) editBoard.value = user.board ?? '';
+  if (editClass) editClass.value = user.cls   ?? '';
+
+  // Study medium
+  profileMedium = user.medium ?? 'english';
+  _syncMediumButtons();
+}
+
+/* ─────────────────────────────────────────
+   Study medium toggle
+───────────────────────────────────────── */
+function setProfileMedium(m) {
+  profileMedium = m;
+  _syncMediumButtons();
+}
+
+function _syncMediumButtons() {
+  const enBtn = document.getElementById('prof-med-en');
+  const urBtn = document.getElementById('prof-med-ur');
+  if (enBtn) {
+    enBtn.classList.toggle('active', profileMedium === 'english');
+    enBtn.setAttribute('aria-pressed', profileMedium === 'english' ? 'true' : 'false');
   }
+  if (urBtn) {
+    urBtn.classList.toggle('active', profileMedium === 'urdu');
+    urBtn.setAttribute('aria-pressed', profileMedium === 'urdu' ? 'true' : 'false');
+  }
+}
+
+/* ─────────────────────────────────────────
+   Save profile
+───────────────────────────────────────── */
+async function saveProfile() {
+  const name  = getValue('edit-name').trim();
+  const email = getValue('edit-email').trim();
+  const board = getValue('edit-board');
+  const cls   = getValue('edit-class');
+
+  // Basic validation
+  if (!name) { alert('Please enter your full name.'); return; }
+  if (!email || !email.includes('@')) { alert('Please enter a valid email address.'); return; }
+
+  const uid = requireAuth();
+  if (!uid) return;
+
+  const saveBtn = document.querySelector('.submit-btn');
+  if (saveBtn) saveBtn.disabled = true;
 
   try {
-    const { auth } = await import('./firebase-config.js');
-    const { updatePassword, reauthenticateWithCredential, EmailAuthProvider } = 
+    const updates = { name, email, board, cls, medium: profileMedium };
+
+    await firebaseUpdateProfile(uid, updates);
+
+    // Sync localStorage
+    try {
+      const raw  = localStorage.getItem('acron_user');
+      const user = raw ? JSON.parse(raw) : {};
+      localStorage.setItem('acron_user', JSON.stringify({ ...user, ...updates, uid }));
+    } catch { /* localStorage unavailable */ }
+
+    // Update top card live
+    setText('profile-name',   name);
+    setText('profile-email',  email);
+    setText('profile-avatar', name.charAt(0).toUpperCase());
+    setText('profile-board',  formatBoard(board, cls));
+
+    flashSuccess('save-success');
+
+  } catch (err) {
+    console.error('[Profile] save:', err);
+    alert('Error saving profile. Please try again.');
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
+  }
+}
+
+/* ─────────────────────────────────────────
+   Change password
+───────────────────────────────────────── */
+async function changePassword() {
+  const oldPass  = getValue('old-pass');
+  const newPass  = getValue('new-pass');
+  const newPass2 = getValue('new-pass2');
+
+  showFieldError('pass-error', '');
+
+  // Validate
+  if (!oldPass || !newPass || !newPass2) {
+    showFieldError('pass-error', 'Please fill in all password fields.');
+    return;
+  }
+  if (newPass.length < 6) {
+    showFieldError('pass-error', 'New password must be at least 6 characters.');
+    return;
+  }
+  if (newPass !== newPass2) {
+    showFieldError('pass-error', 'New passwords do not match.');
+    return;
+  }
+  if (oldPass === newPass) {
+    showFieldError('pass-error', 'New password must be different from your current password.');
+    return;
+  }
+
+  const changeBtn = document.querySelectorAll('.submit-btn')[1];
+  if (changeBtn) changeBtn.disabled = true;
+
+  try {
+    const { auth }   = await import('./firebase-config.js');
+    const { updatePassword, reauthenticateWithCredential, EmailAuthProvider } =
       await import('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js');
 
     const user = auth.currentUser;
     if (!user) {
-      errEl.textContent = 'Please log in again to change password.';
+      showFieldError('pass-error', 'Session expired. Please log in again.');
       return;
     }
 
-    // Reauthenticate first
+    // Re-authenticate before sensitive operation
     const credential = EmailAuthProvider.credential(user.email, oldPass);
     await reauthenticateWithCredential(user, credential);
 
-    // Update password
     await updatePassword(user, newPass);
 
     // Clear fields
-    document.getElementById('old-pass').value = '';
-    document.getElementById('new-pass').value = '';
-    document.getElementById('new-pass2').value = '';
+    ['old-pass', 'new-pass', 'new-pass2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
 
-    // Show success
-    const msg = document.getElementById('pass-success');
-    msg.classList.add('show');
-    setTimeout(() => msg.classList.remove('show'), 3000);
+    flashSuccess('pass-success');
 
   } catch (err) {
-    console.log('Password change error:', err);
-    if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-      errEl.textContent = 'Current password is wrong.';
-    } else {
-      errEl.textContent = 'Error changing password. Please try again.';
-    }
+    console.error('[Profile] changePassword:', err);
+    const code = err?.code ?? '';
+    const msg  =
+      code === 'auth/wrong-password'     ? 'Current password is incorrect.'        :
+      code === 'auth/invalid-credential' ? 'Current password is incorrect.'        :
+      code === 'auth/weak-password'      ? 'New password is too weak.'             :
+      code === 'auth/requires-recent-login' ? 'Please log out and log in again to change your password.' :
+      'Error changing password. Please try again.';
+    showFieldError('pass-error', msg);
+  } finally {
+    if (changeBtn) changeBtn.disabled = false;
   }
 }
 
+/* ─────────────────────────────────────────
+   Delete account
+───────────────────────────────────────── */
 async function confirmDelete() {
-  const confirm1 = window.confirm(
-    'Are you sure you want to delete your account?\nAll your quizzes and progress will be lost.'
-  );
-  if (!confirm1) return;
+  // Two-step confirmation
+  if (!window.confirm(
+    'Are you sure you want to delete your account?\n\nAll your quizzes, progress, and data will be permanently lost.'
+  )) return;
 
-  const confirm2 = window.confirm('This cannot be undone. Are you really sure?');
-  if (!confirm2) return;
+  if (!window.confirm(
+    'This cannot be undone. Type OK to confirm permanent deletion.'
+  )) return;
 
   try {
     const { auth, db } = await import('./firebase-config.js');
-    const { remove } = await import('https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js');
-    const { ref } = await import('https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js');
+    const { ref, remove } =
+      await import('https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js');
 
     const uid = localStorage.getItem('acron_uid');
+    if (!uid) return;
 
-    // Delete from database
-    await remove(ref(db, 'users/' + uid));
+    // Delete database record first
+    await remove(ref(db, `users/${uid}`));
 
-    // Delete auth account
-    await auth.currentUser.delete();
+    // Delete Firebase Auth account
+    const user = auth.currentUser;
+    if (user) await user.delete();
 
-    // Clear local storage
+    // Wipe local storage
     localStorage.clear();
     window.location.href = 'index.html';
 
   } catch (err) {
-    console.log('Delete error:', err);
-    alert('Error deleting account. Please log in again and try.');
+    console.error('[Profile] delete:', err);
+    const msg = err?.code === 'auth/requires-recent-login'
+      ? 'Please log out and log in again before deleting your account.'
+      : 'Error deleting account. Please try again.';
+    alert(msg);
   }
 }
 
+/* ─────────────────────────────────────────
+   Boot
+───────────────────────────────────────── */
 window.addEventListener('DOMContentLoaded', () => {
   initProfile();
 
-  // Add button listeners
-  const saveBtn = document.querySelector('button[onclick="saveProfile()"]');
-  const changePassBtn = document.querySelector('button[onclick="changePassword()"]');
-  const deleteBtn = document.querySelector('button[onclick="confirmDelete()"]');
+  // Wire up buttons via event listeners (remove inline onclick)
+  const wireClick = (selector, handler) => {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.removeAttribute('onclick');
+    el.addEventListener('click', handler);
+  };
 
-  if (saveBtn) {
-    saveBtn.removeAttribute('onclick');
-    saveBtn.addEventListener('click', saveProfile);
-  }
-  if (changePassBtn) {
-    changePassBtn.removeAttribute('onclick');
-    changePassBtn.addEventListener('click', changePassword);
-  }
-  if (deleteBtn) {
-    deleteBtn.removeAttribute('onclick');
-    deleteBtn.addEventListener('click', confirmDelete);
-  }
+  wireClick('button[onclick="saveProfile()"]',    saveProfile);
+  wireClick('button[onclick="changePassword()"]', changePassword);
+  wireClick('button[onclick="confirmDelete()"]',  confirmDelete);
 
-  const medEn = document.getElementById('prof-med-en');
-  const medUr = document.getElementById('prof-med-ur');
-  if (medEn) medEn.addEventListener('click', () => setProfileMedium('english'));
-  if (medUr) medUr.addEventListener('click', () => setProfileMedium('urdu'));
+  document.getElementById('prof-med-en')
+    ?.addEventListener('click', () => setProfileMedium('english'));
+  document.getElementById('prof-med-ur')
+    ?.addEventListener('click', () => setProfileMedium('urdu'));
 });
+
+/* ─────────────────────────────────────────
+   Exports (called from HTML onclick attrs
+   that remain in the improved profile.html)
+───────────────────────────────────────── */
+window.saveProfile      = saveProfile;
+window.changePassword   = changePassword;
+window.confirmDelete    = confirmDelete;
+window.setProfileMedium = setProfileMedium;
+window.initProfile      = initProfile;

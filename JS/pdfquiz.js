@@ -1,197 +1,304 @@
-let pdfText = '';
-let pdfQuiz = [];
-let pdfCurrentQ = 0;
-let pdfAnswers = [];
-let pdfLevel = '';
+/* ============================================================
+   pdfquiz.js — PDF upload, text extraction, AI quiz generation
+   ============================================================ */
+
+/* ─────────────────────────────────────────
+   State
+───────────────────────────────────────── */
+let pdfQuiz      = [];
+let pdfCurrentQ  = 0;
+let pdfAnswers   = [];
+let pdfLevel     = '';
 let pdfTotalPages = 0;
 
-function handlePDFUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
+const PDF_JS_VERSION = '3.11.174';
+const PDF_JS_CDN     = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_JS_VERSION}`;
+const MAX_TEXT_CHARS = 4000;
 
-
-  // Show file name
-  document.getElementById('upload-text').textContent = '✅ ' + file.name;
-  document.getElementById('upload-area').style.borderColor = '#34d399';
-
-  // Read PDF using FileReader
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const typedArray = new Uint8Array(e.target.result);
-    loadPDF(typedArray);
-  };
-  reader.readAsArrayBuffer(file);
+/* ─────────────────────────────────────────
+   Helpers — show/hide sections
+───────────────────────────────────────── */
+function showSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'block';
 }
 
-async function loadPDF(typedArray) {
-  // Load PDF.js library
-  if (!window.pdfjsLib) {
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  }
-
-  const pdf = await window.pdfjsLib.getDocument(typedArray).promise;
-  pdfTotalPages = pdf.numPages;
-
-  // Show total pages
-  document.getElementById('total-pages').textContent = pdfTotalPages;
-  document.getElementById('page-to').value = Math.min(10, pdfTotalPages);
-  document.getElementById('page-to').max = pdfTotalPages;
-  document.getElementById('page-from').max = pdfTotalPages;
-
-  // Show next options
-  document.getElementById('page-range-group').style.display = 'block';
-  document.getElementById('level-group').style.display = 'block';
-  document.getElementById('qcount-group').style.display = 'block';
-
-  // Store PDF for later text extraction
-  window.currentPDF = pdf;
+function hideSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
 }
 
+function showFlex(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'flex';
+}
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+/* ─────────────────────────────────────────
+   Lazy-load PDF.js
+───────────────────────────────────────── */
 function loadScript(src) {
   return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = resolve;
-    script.onerror = reject;
-    document.head.appendChild(script);
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s   = document.createElement('script');
+    s.src     = src;
+    s.onload  = resolve;
+    s.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+    document.head.appendChild(s);
   });
 }
 
+async function ensurePDFJS() {
+  if (window.pdfjsLib) return;
+  await loadScript(`${PDF_JS_CDN}/pdf.min.js`);
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+    `${PDF_JS_CDN}/pdf.worker.min.js`;
+}
+
+/* ─────────────────────────────────────────
+   Step 1 — Handle file upload
+───────────────────────────────────────── */
+function handlePDFUpload(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+
+  // Validate file type
+  if (file.type !== 'application/pdf') {
+    showUploadError('Please upload a PDF file.');
+    return;
+  }
+
+  // Validate file size (10 MB)
+  if (file.size > 10 * 1024 * 1024) {
+    showUploadError('File is too large. Maximum size is 10 MB.');
+    return;
+  }
+
+  // Update upload zone UI
+  const area = document.getElementById('upload-area');
+  const text = document.getElementById('upload-text');
+  if (area) area.classList.add('has-file');
+  if (text) text.innerHTML = `
+    <span style="
+      display:inline-flex;align-items:center;gap:8px;
+      background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);
+      color:var(--teal);padding:6px 12px;border-radius:20px;
+      font-size:13px;font-weight:700;max-width:100%;word-break:break-all;
+    ">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      ${escapeHTML(file.name)}
+    </span>`;
+
+  // Read as ArrayBuffer for PDF.js
+  const reader = new FileReader();
+  reader.onload  = e => loadPDF(new Uint8Array(e.target.result));
+  reader.onerror = () => showUploadError('Could not read file. Please try again.');
+  reader.readAsArrayBuffer(file);
+}
+
+function showUploadError(msg) {
+  const area = document.getElementById('upload-area');
+  const text = document.getElementById('upload-text');
+  if (area) { area.classList.remove('has-file'); area.style.borderColor = 'var(--rose)'; }
+  if (text) text.textContent = msg;
+  setTimeout(() => {
+    if (area) area.style.borderColor = '';
+    if (text) text.textContent = 'Click to upload PDF';
+  }, 3000);
+}
+
+/* ─────────────────────────────────────────
+   Step 1 — Load PDF metadata
+───────────────────────────────────────── */
+async function loadPDF(typedArray) {
+  try {
+    await ensurePDFJS();
+    const pdf     = await window.pdfjsLib.getDocument(typedArray).promise;
+    pdfTotalPages = pdf.numPages;
+
+    // Set page range defaults
+    const pageFrom = document.getElementById('page-from');
+    const pageTo   = document.getElementById('page-to');
+    if (pageFrom) { pageFrom.max = pdfTotalPages; }
+    if (pageTo)   { pageTo.value = Math.min(10, pdfTotalPages); pageTo.max = pdfTotalPages; }
+    setText('total-pages', pdfTotalPages);
+
+    // Reveal options
+    showSection('page-range-group');
+    showSection('level-group');
+    showSection('qcount-group');
+
+    window.currentPDF = pdf;
+    checkPDFGenBtn();
+
+  } catch (err) {
+    console.error('[PDFQuiz] loadPDF:', err);
+    showUploadError('Could not read PDF. Is it a valid, non-scanned PDF?');
+  }
+}
+
+/* ─────────────────────────────────────────
+   Step 1 — Difficulty selection
+───────────────────────────────────────── */
 function selectPDFLevel(el, level) {
-  document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('#level-group .level-card').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-checked', 'false');
+  });
   el.classList.add('selected');
+  el.setAttribute('aria-checked', 'true');
   pdfLevel = level;
   checkPDFGenBtn();
 }
 
 function checkPDFGenBtn() {
-  const btn = document.getElementById('pdf-gen-btn');
-  if (pdfLevel && window.currentPDF) {
-    btn.removeAttribute('disabled');
-  } else {
-    btn.setAttribute('disabled', true);
-  }
+  const btn   = document.getElementById('pdf-gen-btn');
+  const ready = !!(pdfLevel && window.currentPDF);
+  if (!btn) return;
+  btn.toggleAttribute('disabled', !ready);
+  btn.setAttribute('aria-disabled', ready ? 'false' : 'true');
 }
 
+/* ─────────────────────────────────────────
+   Step 1 — Validate page range
+───────────────────────────────────────── */
+function validatePageRange() {
+  const from = parseInt(document.getElementById('page-from')?.value ?? '1');
+  const to   = parseInt(document.getElementById('page-to')?.value   ?? '1');
+
+  if (isNaN(from) || isNaN(to) || from < 1) {
+    return { valid: false, msg: 'Invalid page numbers.' };
+  }
+  if (from > to) {
+    return { valid: false, msg: '"From page" cannot be greater than "To page".' };
+  }
+  if (to > pdfTotalPages) {
+    return { valid: false, msg: `"To page" cannot exceed total pages (${pdfTotalPages}).` };
+  }
+  return { valid: true, from, to };
+}
+
+/* ─────────────────────────────────────────
+   Step 2 — Generate quiz
+───────────────────────────────────────── */
 async function generatePDFQuiz() {
   if (!window.currentPDF || !pdfLevel) return;
 
-  const fromPage = parseInt(document.getElementById('page-from').value);
-  const toPage = parseInt(document.getElementById('page-to').value);
-  const qcount = document.getElementById('pdf-qcount').value;
+  const range  = validatePageRange();
+  if (!range.valid) { alert(range.msg); return; }
 
-  if (fromPage > toPage) {
-    alert('From page cannot be greater than To page!');
-    return;
-  }
+  const qcount = parseInt(document.getElementById('pdf-qcount')?.value ?? '10');
 
-  if (toPage > pdfTotalPages) {
-    alert('To page cannot be greater than total pages (' + pdfTotalPages + ')!');
-    return;
-  }
-
-  // Show loading
-  document.getElementById('pdf-setup').style.display = 'none';
-  document.getElementById('pdf-loading').style.display = 'flex';
+  // Switch to loading view
+  hideSection('pdf-setup');
+  showFlex('pdf-loading');
 
   try {
     // Extract text from selected pages
-    let extractedText = '';
-    for (let i = fromPage; i <= toPage; i++) {
-      const page = await window.currentPDF.getPage(i);
+    let extracted = '';
+    for (let i = range.from; i <= range.to; i++) {
+      const page        = await window.currentPDF.getPage(i);
       const textContent = await page.getTextContent();
-      const pageText = textContent.items.map(item => item.str).join(' ');
-      extractedText += pageText + ' ';
+      extracted        += textContent.items.map(item => item.str).join(' ') + ' ';
     }
 
-    pdfText = extractedText.trim();
+    extracted = extracted.trim();
 
-    if (pdfText.length < 100) {
-      throw new Error('Not enough text found in selected pages. Try selecting more pages.');
+    if (extracted.length < 100) {
+      throw new Error(
+        'Not enough readable text found in the selected pages. ' +
+        'Try selecting more pages, or check that the PDF is not scanned/image-based.'
+      );
     }
 
-    // Limit text to avoid token limits
-    const limitedText = pdfText.substring(0, 4000);
+    const limitedText = extracted.slice(0, MAX_TEXT_CHARS);
+    const questions   = await fetchPDFQuizFromAI(limitedText, pdfLevel, qcount);
 
-    // Generate quiz from text
-    const questions = await fetchPDFQuizFromAI(limitedText, pdfLevel, qcount);
-    pdfQuiz = questions;
+    if (!Array.isArray(questions) || questions.length === 0) {
+      throw new Error('AI returned no questions. Please try again.');
+    }
+
+    pdfQuiz     = questions;
     pdfCurrentQ = 0;
-    pdfAnswers = new Array(questions.length).fill(null);
+    pdfAnswers  = new Array(questions.length).fill(null);
     showPDFQuizActive();
 
   } catch (err) {
-    console.log('PDF Quiz error:', err);
-    alert('Error: ' + err.message);
-    document.getElementById('pdf-setup').style.display = 'block';
-    document.getElementById('pdf-loading').style.display = 'none';
+    console.error('[PDFQuiz] generate:', err);
+    hideSection('pdf-loading');
+    showSection('pdf-setup');
+    alert('Error: ' + (err.message || 'Something went wrong. Please try again.'));
   }
 }
 
+/* ─────────────────────────────────────────
+   AI API call
+───────────────────────────────────────── */
 async function fetchPDFQuizFromAI(text, level, count) {
   const levelDesc = {
-    low:    'very easy basic recall',
-    medium: 'medium difficulty application',
-    high:   'hard analytical exam level'
+    low:    'very easy basic recall questions',
+    medium: 'medium difficulty comprehension questions',
+    high:   'hard analytical exam-level questions',
   };
 
-  const prompt = `You are a quiz maker. Based on the following text, generate ${count} ${levelDesc[level]} multiple choice questions.
+  const prompt = `You are an expert quiz maker for Pakistani students. Based ONLY on the text below, generate exactly ${count} ${levelDesc[level] ?? 'multiple choice questions'}.
 
-  TEXT:
-  ${text}
-  
-  Rules:
-  - Questions must be based ONLY on the text above
-  - Do not use outside knowledge
-  - Return ONLY a JSON array
-  - No extra text or markdown
-  
-  Format:
-  [
-    {
-      "q": "Question here?",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "answer": 0,
-      "explanations": [
-        "Why option A is correct or wrong — one sentence.",
-        "Why option B is correct or wrong — one sentence.",
-        "Why option C is correct or wrong — one sentence.",
-        "Why option D is correct or wrong — one sentence."
-      ]
-    }
-  ]
-  "answer" is the index (0,1,2,3) of the correct option.
-  "explanations" has exactly 4 items — one for each option.
-  For correct option start with ✓ Correct: and for wrong options start with ✗ Wrong:
-  Keep each explanation to one sentence.`;
+TEXT:
+${text}
+
+RULES:
+- Questions must be based ONLY on the provided text — no outside knowledge
+- Each question must have exactly 4 options
+- Return ONLY a valid JSON array — no markdown, no explanation, no preamble
+- "answer" is the zero-based index (0, 1, 2, or 3) of the correct option
+
+FORMAT:
+[
+  {
+    "q": "Question text here?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "answer": 0
+  }
+]`;
 
   const response = await fetch('/api/quiz', {
-    method: 'POST',
+    method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt: prompt })
+    body:    JSON.stringify({ prompt }),
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error('API error: ' + errorText);
+    const errorText = await response.text().catch(() => response.statusText);
+    throw new Error(`API error (${response.status}): ${errorText}`);
   }
 
   const data = await response.json();
 
-  if (!data.choices || !data.choices[0]) {
-    throw new Error('No response from AI. Try again.');
-  }
+  const raw   = data?.choices?.[0]?.message?.content;
+  if (!raw)   throw new Error('No response from AI. Please try again.');
 
-  const text2 = data.choices[0].message.content;
-  const clean = text2.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
+  const clean = raw.replace(/```json|```/g, '').trim();
+
+  try {
+    return JSON.parse(clean);
+  } catch {
+    throw new Error('AI returned an unexpected format. Please try again.');
+  }
 }
 
+/* ─────────────────────────────────────────
+   Step 3 — Quiz active
+───────────────────────────────────────── */
 function showPDFQuizActive() {
-  document.getElementById('pdf-loading').style.display = 'none';
-  document.getElementById('pdf-quiz-active').style.display = 'block';
+  hideSection('pdf-loading');
+  showSection('pdf-quiz-active');
   renderPDFQuestion();
 }
 
@@ -199,70 +306,73 @@ function renderPDFQuestion() {
   const q = pdfQuiz[pdfCurrentQ];
   if (!q) return;
 
-  const pct = ((pdfCurrentQ + 1) / pdfQuiz.length) * 100;
-  document.getElementById('pdf-progress-fill').style.width = pct + '%';
-  document.getElementById('pdf-quiz-counter').textContent =
-    'Question ' + (pdfCurrentQ + 1) + ' of ' + pdfQuiz.length;
-  document.getElementById('pdf-quiz-label').textContent =
-    'PDF Quiz — ' + pdfLevel + ' level';
-  document.getElementById('pdf-question-text').textContent = q.q;
-  // Remove old explanations
-  document.querySelectorAll('.option-explanation').forEach(e => e.remove());
+  const total = pdfQuiz.length;
+  const pct   = ((pdfCurrentQ + 1) / total) * 100;
 
+  // Progress
+  const fill = document.getElementById('pdf-progress-fill');
+  if (fill) {
+    fill.style.width = pct + '%';
+    fill.closest('[role="progressbar"]')?.setAttribute('aria-valuenow', Math.round(pct));
+  }
+
+  setText('pdf-quiz-counter', `Question ${pdfCurrentQ + 1} of ${total}`);
+  setText('pdf-quiz-label',   `PDF Quiz — ${capitalize(pdfLevel)} level`);
+  setText('pdf-question-text', q.q);
+
+  // Options
   const optList = document.getElementById('pdf-options-list');
+  if (!optList) return;
   optList.innerHTML = '';
-  const letters = ['A', 'B', 'C', 'D'];
+
+  const letters    = ['A', 'B', 'C', 'D'];
+  const answered   = pdfAnswers[pdfCurrentQ] !== null;
 
   q.options.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
-    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span> ${opt}`;
+    btn.setAttribute('role', 'listitem');
+    btn.setAttribute('aria-label', `Option ${letters[i]}: ${opt}`);
+    btn.innerHTML = `<span class="opt-letter" aria-hidden="true">${letters[i]}</span>${escapeHTML(opt)}`;
 
-    if (pdfAnswers[pdfCurrentQ] !== null) {
-      btn.classList.add('answered');
-      if (i === q.answer) btn.classList.add('correct');
+    if (answered) {
+      btn.disabled = true;
+      if (i === q.answer)                  btn.classList.add('correct');
       else if (i === pdfAnswers[pdfCurrentQ]) btn.classList.add('wrong');
+    } else {
+      btn.addEventListener('click', () => selectPDFAnswer(i));
     }
 
-    btn.onclick = () => selectPDFAnswer(i);
     optList.appendChild(btn);
   });
 
-  document.getElementById('pdf-btn-prev').disabled = pdfCurrentQ === 0;
+  // Nav buttons
+  const prevBtn = document.getElementById('pdf-btn-prev');
   const nextBtn = document.getElementById('pdf-btn-next');
+  if (prevBtn) prevBtn.disabled = pdfCurrentQ === 0;
 
-  if (pdfCurrentQ === pdfQuiz.length - 1) {
-    nextBtn.innerHTML = 'Submit <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
-    nextBtn.onclick = submitPDFQuiz;
-  } else {
-    nextBtn.innerHTML = 'Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
-    nextBtn.onclick = pdfNextQ;
+  if (nextBtn) {
+    const isLast = pdfCurrentQ === total - 1;
+    nextBtn.innerHTML = isLast
+      ? `Submit <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`
+      : `Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+    nextBtn.onclick = isLast ? submitPDFQuiz : pdfNextQ;
+    nextBtn.setAttribute('aria-label', isLast ? 'Submit quiz' : 'Next question');
   }
 }
 
 function selectPDFAnswer(index) {
-  if (pdfAnswers[pdfCurrentQ] !== null) return;
+  if (pdfAnswers[pdfCurrentQ] !== null) return; // already answered
   pdfAnswers[pdfCurrentQ] = index;
 
-  const q = pdfQuiz[pdfCurrentQ];
+  const q    = pdfQuiz[pdfCurrentQ];
   const btns = document.querySelectorAll('#pdf-options-list .option-btn');
-
   btns.forEach((btn, i) => {
-    btn.classList.add('answered');
-    if (i === q.answer) btn.classList.add('correct');
+    btn.disabled = true;
+    if (i === q.answer)  btn.classList.add('correct');
     else if (i === index) btn.classList.add('wrong');
-
-    // Show explanation right next to each option
-    if (q.explanations && q.explanations[i]) {
-      const expDiv = document.createElement('div');
-      expDiv.className = 'option-explanation ' +
-        (i === q.answer ? 'opt-exp-correct' : 'opt-exp-wrong');
-      expDiv.textContent = q.explanations[i];
-      btn.after(expDiv);
-    }
   });
 }
-
 
 function pdfNextQ() {
   if (pdfCurrentQ < pdfQuiz.length - 1) {
@@ -278,129 +388,116 @@ function pdfPrevQ() {
   }
 }
 
+/* ─────────────────────────────────────────
+   Step 4 — Results
+───────────────────────────────────────── */
 function submitPDFQuiz() {
   let score = 0;
-  pdfQuiz.forEach((q, i) => {
-    if (pdfAnswers[i] === q.answer) score++;
-  });
+  pdfQuiz.forEach((q, i) => { if (pdfAnswers[i] === q.answer) score++; });
 
-  const total = pdfQuiz.length;
+  const total   = pdfQuiz.length;
   const percent = Math.round((score / total) * 100);
 
-  document.getElementById('pdf-quiz-active').style.display = 'none';
-  document.getElementById('pdf-results').style.display = 'block';
+  hideSection('pdf-quiz-active');
+  showSection('pdf-results');
 
-  const iconEl = document.getElementById('pdf-result-icon');
-  if (percent >= 80) iconEl.textContent = '🏆';
-  else if (percent >= 60) iconEl.textContent = '👍';
-  else if (percent >= 40) iconEl.textContent = '📚';
-  else iconEl.textContent = '💪';
+  // Icon
+  setText('pdf-result-icon',
+    percent >= 80 ? '🏆' :
+    percent >= 60 ? '👍' :
+    percent >= 40 ? '📚' : '💪'
+  );
 
-  document.getElementById('pdf-result-score').textContent = score + ' / ' + total;
-  document.getElementById('pdf-result-percent').textContent = percent + '%';
+  setText('pdf-result-score',   `${score} / ${total}`);
+  setText('pdf-result-percent', `${percent}%`);
+  setText('pdf-result-msg',
+    percent >= 80 ? 'Excellent! You understood the material well.'  :
+    percent >= 60 ? 'Good work! Keep studying.'                     :
+    percent >= 40 ? 'Keep reading — you can do better!'             :
+    'Read the pages again and retry!'
+  );
 
-  const msg = percent >= 80 ? 'Excellent! You understood the material well.' :
-              percent >= 60 ? 'Good work! Keep studying.' :
-              percent >= 40 ? 'Keep reading. You can do better!' :
-              'Read the pages again and retry!';
-  document.getElementById('pdf-result-msg').textContent = msg;
-
-  // Show breakdown
+  // Breakdown
   const container = document.getElementById('pdf-result-breakdown');
+  if (!container) return;
   container.innerHTML = '';
+
   pdfQuiz.forEach((q, i) => {
-    const correct = pdfAnswers[i] === q.answer;
-    const item = document.createElement('div');
-    item.className = 'breakdown-item ' + (correct ? 'correct-item' : 'wrong-item');
-    const yourAns = pdfAnswers[i] !== null ? q.options[pdfAnswers[i]] : 'Not answered';
+    const correct    = pdfAnswers[i] === q.answer;
+    const yourAns    = pdfAnswers[i] !== null ? q.options[pdfAnswers[i]] : 'Not answered';
     const correctAns = q.options[q.answer];
-    item.innerHTML = `
+
+    const item       = document.createElement('div');
+    item.className   = `breakdown-item ${correct ? 'correct-item' : 'wrong-item'}`;
+    item.innerHTML   = `
       <div>
-        <div class="bi-q">${i + 1}. ${q.q}</div>
-        ${!correct ?
-          `<div class="bi-ans wrong-ans">Your answer: ${yourAns}</div>
-           <div class="bi-ans correct-ans">Correct: ${correctAns}</div>` :
-          `<div class="bi-ans correct-ans">✓ Correct</div>`
+        <div class="bi-q">${i + 1}. ${escapeHTML(q.q)}</div>
+        ${correct
+          ? `<div class="bi-ans correct-ans">✓ Correct</div>`
+          : `<div class="bi-ans wrong-ans">Your answer: ${escapeHTML(yourAns)}</div>
+             <div class="bi-ans correct-ans">Correct: ${escapeHTML(correctAns)}</div>`
         }
-      </div>
-    `;
+      </div>`;
     container.appendChild(item);
   });
 }
 
-function showPDFRetryOptions() {
-  const old = document.getElementById('pdf-retry-options');
-  if (old) old.remove();
-
-  const div = document.createElement('div');
-  div.id = 'pdf-retry-options';
-  div.innerHTML = `
-    <div style="
-      background:rgba(108,99,255,0.08);
-      border:1px solid rgba(108,99,255,0.2);
-      border-radius:14px;
-      padding:1.2rem;
-      margin-top:1rem;
-      text-align:center;
-    ">
-      <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:6px">
-        What do you want to do?
-      </div>
-      <div style="font-size:13px;color:#9ca3af;margin-bottom:1rem">
-        آپ کیا کرنا چاہتے ہیں؟
-      </div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button onclick="pdfRetrySame()" style="
-          padding:10px 20px;border-radius:10px;
-          background:rgba(108,99,255,0.15);
-          border:1px solid rgba(108,99,255,0.3);
-          color:#a78bfa;font-size:13px;font-weight:700;
-          font-family:Nunito,sans-serif;cursor:pointer;
-        ">
-          🔄 Retry same quiz
-        </button>
-        <button onclick="pdfNewQuiz()" style="
-          padding:10px 20px;border-radius:10px;
-          background:linear-gradient(135deg,#34d399,#059669);
-          border:none;
-          color:#fff;font-size:13px;font-weight:700;
-          font-family:Nunito,sans-serif;cursor:pointer;
-        ">
-          ✨ Upload new PDF
-        </button>
-      </div>
-    </div>
-  `;
-
-  const resultBtns = document.querySelector('.result-btns');
-  if (resultBtns) resultBtns.after(div);
-}
-
-function pdfRetrySame() {
+/* ─────────────────────────────────────────
+   Retry / New quiz
+───────────────────────────────────────── */
+function pdfRetry() {
   pdfCurrentQ = 0;
-  pdfAnswers = new Array(pdfQuiz.length).fill(null);
-  document.getElementById('pdf-results').style.display = 'none';
-  document.getElementById('pdf-quiz-active').style.display = 'block';
+  pdfAnswers  = new Array(pdfQuiz.length).fill(null);
+  hideSection('pdf-results');
+  showSection('pdf-quiz-active');
   renderPDFQuestion();
 }
 
 function pdfNewQuiz() {
-  pdfText = '';
-  pdfQuiz = [];
-  pdfCurrentQ = 0;
-  pdfAnswers = [];
-  pdfLevel = '';
+  // Reset state
+  pdfQuiz       = [];
+  pdfCurrentQ   = 0;
+  pdfAnswers    = [];
+  pdfLevel      = '';
   pdfTotalPages = 0;
   window.currentPDF = null;
 
-  document.getElementById('pdf-results').style.display = 'none';
-  document.getElementById('pdf-setup').style.display = 'block';
-  document.getElementById('upload-text').textContent = 'Click here to upload PDF';
-  document.getElementById('upload-area').style.borderColor = '';
-  document.getElementById('page-range-group').style.display = 'none';
-  document.getElementById('level-group').style.display = 'none';
-  document.getElementById('qcount-group').style.display = 'none';
-  document.getElementById('pdf-input').value = '';
-  document.getElementById('pdf-gen-btn').setAttribute('disabled', true);
-  document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected'));
+  // Reset UI
+  hideSection('pdf-results');
+  showSection('pdf-setup');
+  hideSection('page-range-group');
+  hideSection('level-group');
+  hideSection('qcount-group');
+
+  const area  = document.getElementById('upload-area');
+  const text  = document.getElementById('upload-text');
+  const input = document.getElementById('pdf-input');
+  const btn   = document.getElementById('pdf-gen-btn');
+
+  if (area)  { area.classList.remove('has-file'); area.style.borderColor = ''; }
+  if (text)  text.textContent = 'Click to upload PDF';
+  if (input) input.value = '';
+  if (btn)   { btn.setAttribute('disabled', true); btn.setAttribute('aria-disabled', 'true'); }
+
+  document.querySelectorAll('#level-group .level-card').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-checked', 'false');
+  });
+}
+
+/* ─────────────────────────────────────────
+   Utilities
+───────────────────────────────────────── */
+function escapeHTML(str) {
+  if (typeof str !== 'string') return String(str ?? '');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function capitalize(str) {
+  return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 }

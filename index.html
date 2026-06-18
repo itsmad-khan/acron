@@ -7,172 +7,796 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="CSS/style.css"/>
+<style>
+  /* ── Design Tokens ── */
+  :root {
+    --bg:           #0d0f1a;
+    --bg-2:         #131629;
+    --surface:      #1a1e32;
+    --surface-2:    #1f2438;
+    --border:       rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.13);
 
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-8YTGSYM38H');
-</script>
+    --text-primary:   #f0f2ff;
+    --text-secondary: #8b92b8;
+    --text-muted:     #525878;
 
+    --accent:       #7c6cf0;
+    --accent-light: #9d90f5;
+    --teal:         #34d399;
+    --amber:        #fbbf24;
+
+    --radius-sm:  10px;
+    --radius-md:  14px;
+    --radius-lg:  18px;
+    --radius-xl:  26px;
+
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.25);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.35);
+
+    --transition: 200ms cubic-bezier(0.4,0,0.2,1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  /* ── Navbar ── */
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 64px;
+    background: rgba(13,15,26,0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--accent), #5b4dd4);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(124,108,240,0.4);
+  }
+
+  .logo-name {
+    display: block;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+    letter-spacing: -0.3px;
+  }
+
+  .logo-urdu {
+    display: block;
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1;
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .theme-toggle:hover {
+    background: var(--surface-2);
+    color: var(--text-primary);
+  }
+
+  .lang-switch {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .lang-btn {
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .lang-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .nav-login {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background var(--transition), border-color var(--transition);
+    min-height: 36px;
+  }
+
+  .nav-login:hover {
+    background: var(--surface-2);
+    border-color: var(--border-hover);
+  }
+
+  /* ── Welcome main ── */
+  .welcome-main {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 52px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  /* ── Hero section ── */
+  .hero-section {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(124,108,240,0.12);
+    border: 1px solid rgba(124,108,240,0.25);
+    color: var(--accent-light);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .hero-title {
+    font-size: clamp(36px, 7vw, 56px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -1.5px;
+    color: var(--text-primary);
+  }
+
+  .hero-title .accent {
+    background: linear-gradient(135deg, var(--accent-light), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 17px;
+    color: var(--text-secondary);
+    max-width: 520px;
+    line-height: 1.65;
+    font-weight: 500;
+  }
+
+  .hero-urdu-sub {
+    font-size: 15px;
+    color: var(--text-muted);
+    font-weight: 500;
+    direction: rtl;
+  }
+
+  /* ── Selection card ── */
+  .selection-card {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .step-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .step-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #5b4dd4);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(124,108,240,0.4);
+  }
+
+  .step-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+  }
+
+  /* ── Boards grid ── */
+  .boards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  /* 5th item (Federal) centered */
+  .boards-grid .board-item:last-child:nth-child(5) {
+    grid-column: 1 / -1;
+    max-width: 160px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .board-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--bg-2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px 10px;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition), transform var(--transition), box-shadow var(--transition);
+    text-align: center;
+    min-height: 100px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .board-item:hover {
+    border-color: var(--border-hover);
+    background: var(--surface-2);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .board-item.selected {
+    border-color: var(--accent);
+    background: rgba(124,108,240,0.1);
+    box-shadow: 0 0 0 3px rgba(124,108,240,0.15);
+  }
+
+  .board-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    /* Using SVG icons is better — emoji kept for compatibility with existing JS */
+  }
+
+  .board-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  .board-urdu {
+    font-size: 11px;
+    color: var(--text-secondary);
+    direction: rtl;
+    line-height: 1.3;
+  }
+
+  /* ── Classes grid ── */
+  .classes-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .classes-grid .class-item:last-child:nth-child(5) {
+    grid-column: 1 / -1;
+    max-width: 160px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .class-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: var(--bg-2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px 10px;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition), transform var(--transition), box-shadow var(--transition);
+    text-align: center;
+    min-height: 100px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .class-item:hover {
+    border-color: var(--border-hover);
+    background: var(--surface-2);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .class-item.selected {
+    border-color: var(--teal);
+    background: rgba(52,211,153,0.08);
+    box-shadow: 0 0 0 3px rgba(52,211,153,0.12);
+  }
+
+  .class-num {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+
+  .class-num sup {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-light);
+  }
+
+  .class-sub {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    line-height: 1.3;
+  }
+
+  .class-urdu {
+    font-size: 11px;
+    color: var(--text-muted);
+    direction: rtl;
+    line-height: 1.3;
+  }
+
+  /* ── Continue button ── */
+  .continue-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 15px 24px;
+    margin-top: 24px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: linear-gradient(135deg, var(--accent), #5b4dd4);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: opacity var(--transition), transform var(--transition), box-shadow var(--transition);
+    box-shadow: 0 4px 16px rgba(124,108,240,0.4);
+    min-height: 52px;
+    letter-spacing: 0.2px;
+  }
+
+  .continue-btn:disabled {
+    background: var(--surface-2);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 1;
+  }
+
+  .continue-btn:not(:disabled):hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(124,108,240,0.5);
+  }
+
+  .continue-btn:not(:disabled):active {
+    transform: translateY(0);
+  }
+
+  .login-text {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 16px;
+    font-weight: 500;
+  }
+
+  .login-text a {
+    color: var(--accent-light);
+    font-weight: 700;
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+
+  .login-text a:hover { color: var(--text-primary); }
+
+  /* ── Features strip ── */
+  .features-strip {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .feat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .feat-item svg {
+    color: var(--accent-light);
+    flex-shrink: 0;
+  }
+
+  .feat-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--border-hover);
+    flex-shrink: 0;
+  }
+
+  /* ── Light mode ── */
+  body.light-mode {
+    --bg:           #f4f6fb;
+    --bg-2:         #eef0f7;
+    --surface:      #ffffff;
+    --surface-2:    #f0f2fa;
+    --border:       rgba(0,0,0,0.08);
+    --border-hover: rgba(0,0,0,0.14);
+    --text-primary:   #1a1d2e;
+    --text-secondary: #5a6080;
+    --text-muted:     #9ba3c0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .navbar { padding: 0 16px; }
+    .welcome-main { padding: 32px 16px 60px; gap: 28px; }
+    .selection-card { padding: 22px 16px; }
+    .boards-grid,
+    .classes-grid { grid-template-columns: repeat(2, 1fr); }
+    .boards-grid .board-item:last-child:nth-child(5),
+    .classes-grid .class-item:last-child:nth-child(5) {
+      grid-column: 1 / -1;
+      max-width: 100%;
+    }
+    .features-strip { gap: 12px; }
+    .feat-dot { display: none; }
+    .feat-item { font-size: 13px; }
+  }
+
+  /* ── Accessibility ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+</style>
 </head>
 <body>
 
 <div class="stars" id="stars"></div>
 
-<nav class="navbar">
-  <div class="logo">
-    <div class="logo-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+<a href="#main-content" style="position:absolute;left:-9999px;top:8px;z-index:999;padding:8px 16px;background:var(--accent);color:#fff;border-radius:8px;font-weight:700;text-decoration:none"
+   onfocus="this.style.left='8px'" onblur="this.style.left='-9999px'">Skip to main content</a>
+
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="logo" aria-label="Acron home">
+    <div class="logo-icon" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
     <div>
       <span class="logo-name">Acron</span>
       <span class="logo-urdu">علم کی راہ</span>
     </div>
-  </div>
+  </a>
+
   <div class="nav-right">
-    <div class="lang-switch">
-      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Switch theme">
-        <svg id="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-        <svg id="theme-icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
-          <circle cx="12" cy="12" r="5"/>
-          <line x1="12" y1="1" x2="12" y2="3"/>
-          <line x1="12" y1="21" x2="12" y2="23"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-          <line x1="1" y1="12" x2="3" y2="12"/>
-          <line x1="21" y1="12" x2="23" y2="12"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-        </svg>
-      </button>
-      <button class="lang-btn active" onclick="setLang('en')" id="btn-en">English</button>
-      <button class="lang-btn" onclick="setLang('ur')" id="btn-ur">اردو</button>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()"
+            title="Switch theme" aria-label="Toggle light/dark theme">
+      <svg id="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+      <svg id="theme-icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none" aria-hidden="true">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+    </button>
+
+    <div class="lang-switch" role="group" aria-label="Language selection">
+      <button class="lang-btn active" onclick="setLang('en')" id="btn-en" aria-pressed="true">English</button>
+      <button class="lang-btn" onclick="setLang('ur')" id="btn-ur" aria-pressed="false">اردو</button>
     </div>
+
     <a href="login.html" class="nav-login" id="txt-login">Log in</a>
   </div>
 </nav>
 
-<main class="welcome-main">
-  <div class="hero-section">
-    <div class="hero-badge">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+<main class="welcome-main" id="main-content">
+
+  <!-- Hero -->
+  <section class="hero-section" aria-label="Welcome">
+    <div class="hero-badge" aria-label="Pakistan's free study platform">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
       <span id="txt-badge">Pakistan's free study platform</span>
     </div>
-    <h1 class="hero-title" id="txt-hero">Study smart.<br/><span class="accent">Score high.</span></h1>
-    <p class="hero-sub" id="txt-sub">Books, quizzes and notes — all in one place, completely free for every Pakistani student.</p>
-    <p class="hero-urdu-sub" id="txt-urdu-sub">کتابیں، کوئز اور نوٹس — سب ایک جگہ، بالکل مفت</p>
-  </div>
 
-  <div class="selection-card">
+    <h1 class="hero-title" id="txt-hero">
+      Study smart.<br/>
+      <span class="accent">Score high.</span>
+    </h1>
+
+    <p class="hero-sub" id="txt-sub">
+      Books, quizzes and notes — all in one place, completely free for every Pakistani student.
+    </p>
+    <p class="hero-urdu-sub" id="txt-urdu-sub">کتابیں، کوئز اور نوٹس — سب ایک جگہ، بالکل مفت</p>
+  </section>
+
+  <!-- Selection card -->
+  <section class="selection-card" aria-label="Select your board and class">
+
+    <!-- Step 1: Board -->
     <div class="step-row">
-      <div class="step-badge">1</div>
+      <div class="step-badge" aria-hidden="true">1</div>
       <span class="step-title" id="txt-step1">Choose your board</span>
     </div>
-    <div class="boards-grid" id="boards-grid">
-      <div class="board-item" onclick="selectBoard(this,'punjab')" data-board="punjab">
-        <div class="board-icon">🏛️</div>
+
+    <div class="boards-grid" id="boards-grid" role="radiogroup" aria-label="Select board">
+      <div class="board-item" onclick="selectBoard(this,'punjab')" data-board="punjab"
+           role="radio" aria-checked="false" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectBoard(this,'punjab')">
+        <div class="board-icon" aria-hidden="true">🏛️</div>
         <div class="board-name" id="b-punjab">Punjab</div>
         <div class="board-urdu">پنجاب</div>
       </div>
-      <div class="board-item" onclick="selectBoard(this,'sindh')" data-board="sindh">
-        <div class="board-icon">🌊</div>
+      <div class="board-item" onclick="selectBoard(this,'sindh')" data-board="sindh"
+           role="radio" aria-checked="false" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectBoard(this,'sindh')">
+        <div class="board-icon" aria-hidden="true">🌊</div>
         <div class="board-name" id="b-sindh">Sindh</div>
         <div class="board-urdu">سندھ</div>
       </div>
-      <div class="board-item" onclick="selectBoard(this,'kpk')" data-board="kpk">
-        <div class="board-icon">⛰️</div>
+      <div class="board-item" onclick="selectBoard(this,'kpk')" data-board="kpk"
+           role="radio" aria-checked="false" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectBoard(this,'kpk')">
+        <div class="board-icon" aria-hidden="true">⛰️</div>
         <div class="board-name" id="b-kpk">KPK</div>
         <div class="board-urdu">خیبر پختونخوا</div>
       </div>
-      <div class="board-item" onclick="selectBoard(this,'balochistan')" data-board="balochistan">
-        <div class="board-icon">🏔️</div>
+      <div class="board-item" onclick="selectBoard(this,'balochistan')" data-board="balochistan"
+           role="radio" aria-checked="false" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectBoard(this,'balochistan')">
+        <div class="board-icon" aria-hidden="true">🏔️</div>
         <div class="board-name" id="b-balo">Balochistan</div>
         <div class="board-urdu">بلوچستان</div>
       </div>
-      <div class="board-item" onclick="selectBoard(this,'federal')" data-board="federal">
-        <div class="board-icon">🏢</div>
+      <div class="board-item" onclick="selectBoard(this,'federal')" data-board="federal"
+           role="radio" aria-checked="false" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectBoard(this,'federal')">
+        <div class="board-icon" aria-hidden="true">🏢</div>
         <div class="board-name" id="b-fed">Federal</div>
         <div class="board-urdu">وفاقی</div>
       </div>
     </div>
 
-    <div class="step-row" style="margin-top:1.5rem">
-      <div class="step-badge">2</div>
+    <!-- Step 2: Class -->
+    <div class="step-row" style="margin-top:28px">
+      <div class="step-badge" aria-hidden="true">2</div>
       <span class="step-title" id="txt-step2">Choose your class</span>
     </div>
-    <div class="classes-grid">
-      <div class="class-item" onclick="selectClass(this,'9')">
+
+    <div class="classes-grid" role="radiogroup" aria-label="Select class">
+      <div class="class-item" onclick="selectClass(this,'9')"
+           role="radio" aria-checked="false" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectClass(this,'9')">
         <div class="class-num">9<sup>th</sup></div>
         <div class="class-sub" id="c9">Matric Part 1</div>
         <div class="class-urdu">نویں جماعت</div>
       </div>
-      <div class="class-item" onclick="selectClass(this,'10')">
+      <div class="class-item" onclick="selectClass(this,'10')"
+           role="radio" aria-checked="false" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectClass(this,'10')">
         <div class="class-num">10<sup>th</sup></div>
         <div class="class-sub" id="c10">Matric Part 2</div>
         <div class="class-urdu">دسویں جماعت</div>
       </div>
-      <div class="class-item" onclick="selectClass(this,'11')">
+      <div class="class-item" onclick="selectClass(this,'11')"
+           role="radio" aria-checked="false" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectClass(this,'11')">
         <div class="class-num">11<sup>th</sup></div>
         <div class="class-sub" id="c11">FSc Part 1</div>
         <div class="class-urdu">گیارہویں جماعت</div>
       </div>
-      <div class="class-item" onclick="selectClass(this,'12')">
+      <div class="class-item" onclick="selectClass(this,'12')"
+           role="radio" aria-checked="false" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectClass(this,'12')">
         <div class="class-num">12<sup>th</sup></div>
         <div class="class-sub" id="c12">FSc Part 2</div>
         <div class="class-urdu">بارہویں جماعت</div>
       </div>
-      <div class="class-item other-item" onclick="selectClass(this,'other')">
-        <div class="class-num" style="font-size:28px">🎓</div>
+      <div class="class-item" onclick="selectClass(this,'other')"
+           role="radio" aria-checked="false" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')selectClass(this,'other')">
+        <div class="class-num" style="font-size:28px" aria-hidden="true">🎓</div>
         <div class="class-sub" id="cother">Other / Senior</div>
         <div class="class-urdu">دیگر / سینئر</div>
       </div>
     </div>
 
-    <button class="continue-btn" id="cont-btn" onclick="goToSignup()" disabled>
+    <!-- Continue -->
+    <button class="continue-btn" id="cont-btn" onclick="goToSignup()" disabled
+            aria-disabled="true" aria-describedby="cont-hint">
       <span id="txt-cont">Select board and class to continue</span>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
     </button>
+    <p id="cont-hint" class="login-text" style="margin-top:10px;font-size:12px;color:var(--text-muted)">
+      Choose both a board and a class to unlock this button.
+    </p>
 
-    <p class="login-text" id="txt-have-account">Already have an account? <a href="login.html" id="txt-login-link">Log in here</a></p>
-  </div>
+    <p class="login-text" id="txt-have-account">
+      Already have an account? <a href="login.html" id="txt-login-link">Log in here</a>
+    </p>
+  </section>
 
-  <div class="features-strip">
-    <div class="feat-item">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+  <!-- Features strip -->
+  <div class="features-strip" role="list" aria-label="Platform features">
+    <div class="feat-item" role="listitem">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
       <span id="f1">Read your board's books</span>
     </div>
-    <div class="feat-dot"></div>
-    <div class="feat-item">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+    <div class="feat-dot" aria-hidden="true"></div>
+    <div class="feat-item" role="listitem">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+      </svg>
       <span id="f2">AI quiz — 3 difficulty levels</span>
     </div>
-    <div class="feat-dot"></div>
-    <div class="feat-item">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <div class="feat-dot" aria-hidden="true"></div>
+    <div class="feat-item" role="listitem">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
       <span id="f3">Track your progress</span>
     </div>
   </div>
-</main>
 
-<footer style="
-  position:relative;z-index:1;
-  text-align:center;
-  padding:2rem 1.5rem;
-  border-top:1px solid rgba(255,255,255,0.07);
-  display:flex;gap:20px;justify-content:center;flex-wrap:wrap;
-">
-  <a href="about.html" style="color:#6b7280;font-size:13px;text-decoration:none;font-weight:600">About</a>
-  <a href="contact.html" style="color:#6b7280;font-size:13px;text-decoration:none;font-weight:600">Contact</a>
-  <a href="privacy.html" style="color:#6b7280;font-size:13px;text-decoration:none;font-weight:600">Privacy Policy</a>
-</footer>
+</main>
 
 <script src="JS/lang.js"></script>
 <script src="JS/welcome.js"></script>
-<script>generateStars();</script>
+<script>if (typeof generateStars === 'function') generateStars();</script>
 <script src="JS/config.js"></script>
-<script src="JS/bug-report.js"></script>
+
+<script>
+  // Sync aria-checked and aria-disabled on selection
+  const _origSelectBoard = typeof selectBoard === 'function' ? selectBoard : null;
+  const _origSelectClass = typeof selectClass === 'function' ? selectClass : null;
+
+  function _syncAria() {
+    document.querySelectorAll('[role="radio"]').forEach(el => {
+      el.setAttribute('aria-checked', el.classList.contains('selected') ? 'true' : 'false');
+    });
+    const btn = document.getElementById('cont-btn');
+    if (btn) btn.setAttribute('aria-disabled', btn.disabled ? 'true' : 'false');
+  }
+
+  // Patch after welcome.js loads
+  window.addEventListener('load', () => {
+    const origBoard = window.selectBoard;
+    const origClass = window.selectClass;
+    if (origBoard) window.selectBoard = function(...a) { origBoard(...a); _syncAria(); };
+    if (origClass) window.selectClass = function(...a) { origClass(...a); _syncAria(); };
+  });
+</script>
 </body>
 </html>

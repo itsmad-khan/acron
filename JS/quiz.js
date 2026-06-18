@@ -1,37 +1,102 @@
 import { firebaseSaveQuiz } from './firebase-config.js';
 
-let currentQuiz = [];
-let currentQ = 0;
-let userAnswers = [];
-let quizMeta = {};
+/* ─────────────────────────────────────────
+   Constants
+───────────────────────────────────────── */
+const SUBJECTS_BY_CLASS = {
+  '9':  ['Physics', 'Chemistry', 'Biology', 'Mathematics', 'English'],
+  '10': ['Physics', 'Chemistry', 'Biology', 'Mathematics', 'English'],
+  '11': ['Physics', 'Chemistry', 'Biology', 'Mathematics', 'English'],
+  '12': ['Physics', 'Chemistry', 'Biology', 'Mathematics', 'English'],
+};
 
+const CHAPTER_COUNTS = {
+  Physics:     12,
+  Chemistry:   8,
+  Biology:     10,
+  Mathematics: 7,
+  English:     5,
+};
+
+const DEFAULT_CHAPTER_COUNT = 5;
+
+/* ─────────────────────────────────────────
+   State
+───────────────────────────────────────── */
+let currentQuiz   = [];
+let currentQ      = 0;
+let userAnswers   = [];
+let quizMeta      = {};
+
+/* ─────────────────────────────────────────
+   Helpers
+───────────────────────────────────────── */
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function showSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'block';
+}
+
+function hideSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+
+function showFlex(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'flex';
+}
+
+function escapeHTML(str) {
+  if (typeof str !== 'string') return String(str ?? '');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function capitalize(str) {
+  return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+}
+
+function getLocalUser() {
+  try {
+    const raw = localStorage.getItem('acron_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    console.error('[Quiz] Could not parse local user data.');
+    return null;
+  }
+}
+
+/* ─────────────────────────────────────────
+   Init
+───────────────────────────────────────── */
 function initQuiz() {
-  const loggedIn = localStorage.getItem('acron_logged_in');
-  if (!loggedIn) {
+  if (!localStorage.getItem('acron_logged_in')) {
     window.location.href = 'login.html';
     return;
   }
 
-  const saved = localStorage.getItem('acron_user');
-  if (!saved) return;
-  const user = JSON.parse(saved);
+  const user = getLocalUser();
+  if (!user) return;
 
-  const subjects = {
-    '9':  ['Physics','Chemistry','Biology','Mathematics','English'],
-    '10': ['Physics','Chemistry','Biology','Mathematics','English'],
-    '11': ['Physics','Chemistry','Biology','Mathematics','English'],
-    '12': ['Physics','Chemistry','Biology','Mathematics','English'],
-  };
-
-  const sel = document.getElementById('sel-subject');
-  if (!sel) return;
-
+  // Senior students use the PDF quiz flow instead
   if (user.cls === 'other') {
     window.location.href = 'pdfquiz.html';
     return;
   }
 
-  const subs = subjects[user.cls] || subjects['9'];
+  const sel = document.getElementById('sel-subject');
+  if (!sel) return;
+
+  const subs = SUBJECTS_BY_CLASS[user.cls] ?? SUBJECTS_BY_CLASS['9'];
   subs.forEach(s => {
     const opt = document.createElement('option');
     opt.value = s;
@@ -39,9 +104,11 @@ function initQuiz() {
     sel.appendChild(opt);
   });
 
-  const params = new URLSearchParams(window.location.search);
+  // Pre-fill from URL params (e.g. coming from reader.html)
+  const params     = new URLSearchParams(window.location.search);
   const subFromURL = params.get('subject');
-  const chFromURL = params.get('chapter');
+  const chFromURL  = params.get('chapter');
+
   if (subFromURL) {
     sel.value = subFromURL;
     loadChapters();
@@ -55,25 +122,25 @@ function initQuiz() {
   }
 }
 
+/* ─────────────────────────────────────────
+   Chapter loading
+───────────────────────────────────────── */
 function loadChapters() {
-  const subject = document.getElementById('sel-subject').value;
-  const chSel = document.getElementById('sel-chapter');
+  const subject = document.getElementById('sel-subject')?.value;
+  const chSel   = document.getElementById('sel-chapter');
   if (!chSel) return;
 
   chSel.innerHTML = '<option value="">— Pick a chapter —</option>';
-  chSel.disabled = !subject;
-  if (!subject) return;
+  chSel.disabled  = !subject;
+  chSel.setAttribute('aria-disabled', !subject ? 'true' : 'false');
 
-  const chapters = {
-    'Physics': 12, 'Chemistry': 8, 'Biology': 10,
-    'Mathematics': 7, 'English': 5
-  };
+  if (!subject) { checkGenBtn(); return; }
 
-  const count = chapters[subject] || 5;
+  const count = CHAPTER_COUNTS[subject] ?? DEFAULT_CHAPTER_COUNT;
   for (let i = 1; i <= count; i++) {
     const opt = document.createElement('option');
     opt.value = i;
-    opt.textContent = 'Chapter ' + i;
+    opt.textContent = `Chapter ${i}`;
     chSel.appendChild(opt);
   }
 
@@ -81,184 +148,185 @@ function loadChapters() {
   checkGenBtn();
 }
 
+/* ─────────────────────────────────────────
+   Difficulty selection
+───────────────────────────────────────── */
 function selectLevel(el, level) {
-  document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.level-card').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-checked', 'false');
+  });
   el.classList.add('selected');
+  el.setAttribute('aria-checked', 'true');
   quizMeta.level = level;
   checkOldQuiz();
   checkGenBtn();
 }
 
 function checkGenBtn() {
-  const subject = document.getElementById('sel-subject').value;
-  const chapter = document.getElementById('sel-chapter').value;
-  const btn = document.getElementById('gen-btn');
+  const subject = document.getElementById('sel-subject')?.value;
+  const chapter = document.getElementById('sel-chapter')?.value;
+  const btn     = document.getElementById('gen-btn');
   if (!btn) return;
-  if (subject && chapter && quizMeta.level) {
-    btn.removeAttribute('disabled');
-  } else {
-    btn.setAttribute('disabled', true);
-  }
+
+  const ready = !!(subject && chapter && quizMeta.level);
+  btn.toggleAttribute('disabled', !ready);
+  btn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+}
+
+/* ─────────────────────────────────────────
+   Previous-attempt detection
+───────────────────────────────────────── */
+function findOldQuiz(subject, chapter, level) {
+  const user = getLocalUser();
+  if (!user) return null;
+  const history = Array.isArray(user.quizHistory)
+    ? user.quizHistory
+    : Object.values(user.quizHistory ?? {});
+
+  return history.find(q =>
+    q.subject === subject &&
+    String(q.chapter) === String(chapter) &&
+    q.level === level
+  ) ?? null;
 }
 
 function checkOldQuiz() {
-  const subject = document.getElementById('sel-subject').value;
-  const chapter = document.getElementById('sel-chapter').value;
-  const level = quizMeta.level;
-  const promptEl = document.getElementById('old-quiz-prompt');
-  if (!promptEl) return;
+  const subject = document.getElementById('sel-subject')?.value;
+  const chapter = document.getElementById('sel-chapter')?.value;
+  const level   = quizMeta.level;
+  const prompt  = document.getElementById('old-quiz-prompt');
 
   checkGenBtn();
+  if (!prompt) return;
 
   if (!subject || !chapter || !level) {
-    promptEl.style.display = 'none';
+    prompt.style.display = 'none';
     return;
   }
 
-  const saved = localStorage.getItem('acron_user');
-  if (!saved) return;
-  const user = JSON.parse(saved);
-  const history = user.quizHistory || [];
-
-  const old = history.find(q =>
-    q.subject === subject &&
-    q.chapter == chapter &&
-    q.level === level
-  );
-
+  const old = findOldQuiz(subject, chapter, level);
   if (old) {
-    promptEl.style.display = 'flex';
-    const meta = document.getElementById('old-quiz-meta');
-    if (meta) meta.textContent = subject + ' Ch.' + chapter +
-      ' — ' + old.level + ' — Score: ' + old.score + '/' + old.total;
+    prompt.style.display = 'flex';
+    setText('old-quiz-meta',
+      `${subject} Ch.${chapter} — ${capitalize(old.level)} — Score: ${old.score}/${old.total}`);
   } else {
-    promptEl.style.display = 'none';
+    prompt.style.display = 'none';
   }
 }
 
+/* ─────────────────────────────────────────
+   Generate quiz (AI)
+───────────────────────────────────────── */
 async function generateNewQuiz() {
-  const subject = document.getElementById('sel-subject').value;
-  const chapter = document.getElementById('sel-chapter').value;
-  const level = quizMeta.level;
-  const qcount = document.getElementById('qcount-range').value;
+  const subject = document.getElementById('sel-subject')?.value;
+  const chapter = document.getElementById('sel-chapter')?.value;
+  const level   = quizMeta.level;
+  const qcount  = document.getElementById('qcount-range')?.value ?? '10';
 
   if (!subject || !chapter || !level) return;
 
-  quizMeta = { subject, chapter, level, total: parseInt(qcount) };
+  quizMeta = { subject, chapter, level, total: parseInt(qcount, 10) };
 
-  document.getElementById('quiz-setup').style.display = 'none';
-  document.getElementById('quiz-loading').style.display = 'flex';
+  hideSection('quiz-setup');
+  showFlex('quiz-loading');
 
   try {
     const questions = await fetchQuestionsFromAI(subject, chapter, level, qcount);
-    currentQuiz = questions;
-    currentQ = 0;
-    userAnswers = new Array(questions.length).fill(null);
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      throw new Error('AI returned no questions. Please try again.');
+    }
+
+    currentQuiz  = questions;
+    currentQ     = 0;
+    userAnswers  = new Array(questions.length).fill(null);
     showQuizActive();
+
   } catch (err) {
-    console.log('Full error:', err);
-    alert('Error: ' + err.message);
-    document.getElementById('quiz-setup').style.display = 'block';
-    document.getElementById('quiz-loading').style.display = 'none';
+    console.error('[Quiz] generate:', err);
+    hideSection('quiz-loading');
+    showSection('quiz-setup');
+    alert('Error: ' + (err.message || 'Something went wrong. Please try again.'));
   }
 }
 
 async function fetchQuestionsFromAI(subject, chapter, level, count) {
   const levelDesc = {
-    low:    'very easy basic recall questions, multiple choice',
-    medium: 'medium difficulty application questions, multiple choice',
-    high:   'hard exam level analytical questions, multiple choice'
+    low:    'very easy basic recall',
+    medium: 'medium difficulty application',
+    high:   'hard exam-level analytical',
   };
 
-  const prompt = `You are a Pakistani board exam question maker. Generate ${count} exam-style multiple choice questions for Class ${quizMeta.cls || '12'} students studying ${subject}, Chapter ${chapter}.
+  const prompt = `Generate ${count} ${levelDesc[level] ?? 'medium difficulty'} multiple choice quiz questions for Pakistani students studying ${subject}, Chapter ${chapter}.
 
-Style rules:
-- Questions must follow Pakistani BISE board exam style
-- Use proper academic English
-- Mix of knowledge, understanding and application questions
-- Questions should be clear and unambiguous
-- Options should be plausible — not obviously wrong
-- Difficulty: ${levelDesc[level]}
+Return ONLY a valid JSON array. No extra text, no markdown.
 
-Return ONLY a JSON array. No extra text. No markdown. Format:
+FORMAT:
 [
   {
     "q": "Question text here?",
     "options": ["Option A", "Option B", "Option C", "Option D"],
-    "answer": 0,
-    "explanations": [
-      "Why option A is correct or wrong — one clear sentence.",
-      "Why option B is correct or wrong — one clear sentence.",
-      "Why option C is correct or wrong — one clear sentence.",
-      "Why option D is correct or wrong — one clear sentence."
-    ]
+    "answer": 0
   }
 ]
-"answer" is the index (0,1,2,3) of the correct option.
-"explanations" has exactly 4 items — one explanation for EACH option.
-For correct option start with "✓ Correct:" and for wrong options start with "✗ Wrong:".
-Keep each explanation to one sentence maximum.`;
+"answer" is the zero-based index (0, 1, 2, or 3) of the correct option.`;
 
   let response;
-
   try {
     response = await fetch('/api/quiz', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt })
+      body:    JSON.stringify({ prompt }),
     });
-  } catch (fetchError) {
-    console.log('Fetch failed:', fetchError);
-    throw new Error('Could not connect to AI. Check your internet.');
+  } catch {
+    throw new Error('Could not connect to AI. Check your internet connection.');
   }
 
   if (!response.ok) {
-    const errorText = await response.text();
-    console.log('API error:', errorText);
-    throw new Error('API error ' + response.status + ': ' + errorText);
+    const errorText = await response.text().catch(() => response.statusText);
+    throw new Error(`API error (${response.status}): ${errorText}`);
   }
 
   const data = await response.json();
-  console.log('API response:', data);
+  const raw  = data?.choices?.[0]?.message?.content;
+  if (!raw) throw new Error('No response from AI. Please try again.');
 
-  if (!data.choices || !data.choices[0]) {
-    throw new Error('No response from AI. Try again.');
+  const clean = raw.replace(/```json|```/g, '').trim();
+
+  try {
+    return JSON.parse(clean);
+  } catch {
+    throw new Error('AI returned an unexpected format. Please try again.');
   }
-
-  const text = data.choices[0].message.content;
-  const clean = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
 }
 
+/* ─────────────────────────────────────────
+   Load a previously-saved quiz
+───────────────────────────────────────── */
 function loadOldQuiz() {
-  const subject = document.getElementById('sel-subject').value;
-  const chapter = document.getElementById('sel-chapter').value;
-  const level = quizMeta.level;
+  const subject = document.getElementById('sel-subject')?.value;
+  const chapter = document.getElementById('sel-chapter')?.value;
+  const level   = quizMeta.level;
 
-  const saved = localStorage.getItem('acron_user');
-  if (!saved) return;
-  const user = JSON.parse(saved);
-  const history = user.quizHistory || [];
+  const old = findOldQuiz(subject, chapter, level);
+  if (!old || !old.questions) return;
 
-  const old = history.find(q =>
-    q.subject === subject &&
-    q.chapter == chapter &&
-    q.level === level
-  );
+  quizMeta    = { subject, chapter, level, total: old.questions.length };
+  currentQuiz = old.questions;
+  currentQ    = 0;
+  userAnswers = new Array(old.questions.length).fill(null);
 
-  if (old && old.questions) {
-    quizMeta = { subject, chapter, level, total: old.questions.length };
-    currentQuiz = old.questions;
-    currentQ = 0;
-    userAnswers = new Array(old.questions.length).fill(null);
-    document.getElementById('quiz-setup').style.display = 'none';
-    showQuizActive();
-  }
+  hideSection('quiz-setup');
+  showQuizActive();
 }
 
+/* ─────────────────────────────────────────
+   Quiz active view
+───────────────────────────────────────── */
 function showQuizActive() {
-  document.getElementById('quiz-loading').style.display = 'none';
-  document.getElementById('quiz-active').style.display = 'block';
+  hideSection('quiz-loading');
+  showSection('quiz-active');
   renderQuestion();
 }
 
@@ -266,46 +334,56 @@ function renderQuestion() {
   const q = currentQuiz[currentQ];
   if (!q) return;
 
-  const pct = ((currentQ + 1) / currentQuiz.length) * 100;
-  document.getElementById('quiz-progress-fill').style.width = pct + '%';
-  document.getElementById('quiz-counter').textContent =
-    'Question ' + (currentQ + 1) + ' of ' + currentQuiz.length;
-  document.getElementById('quiz-label-top').textContent =
-    quizMeta.subject + ' — Chapter ' + quizMeta.chapter + ' — ' + quizMeta.level;
-  document.getElementById('question-text').textContent = q.q;
+  const total = currentQuiz.length;
+  const pct   = ((currentQ + 1) / total) * 100;
 
-  // Remove old explanation
-  const oldExp = document.getElementById('quiz-explanation');
-  if (oldExp) oldExp.remove();
+  const fill = document.getElementById('quiz-progress-fill');
+  if (fill) {
+    fill.style.width = pct + '%';
+    fill.closest('[role="progressbar"]')?.setAttribute('aria-valuenow', Math.round(pct));
+  }
+
+  setText('quiz-counter', `Question ${currentQ + 1} of ${total}`);
+  setText('quiz-label-top',
+    `${quizMeta.subject} — Chapter ${quizMeta.chapter} — ${capitalize(quizMeta.level)}`);
+  setText('question-text', q.q);
 
   const optList = document.getElementById('options-list');
+  if (!optList) return;
   optList.innerHTML = '';
-  const letters = ['A', 'B', 'C', 'D'];
+
+  const letters  = ['A', 'B', 'C', 'D'];
+  const answered = userAnswers[currentQ] !== null;
 
   q.options.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
-    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span> ${opt}`;
+    btn.setAttribute('role', 'listitem');
+    btn.setAttribute('aria-label', `Option ${letters[i]}: ${opt}`);
+    btn.innerHTML = `<span class="opt-letter" aria-hidden="true">${letters[i]}</span>${escapeHTML(opt)}`;
 
-    if (userAnswers[currentQ] !== null) {
-      btn.classList.add('answered');
-      if (i === q.answer) btn.classList.add('correct');
+    if (answered) {
+      btn.disabled = true;
+      if (i === q.answer)               btn.classList.add('correct');
       else if (i === userAnswers[currentQ]) btn.classList.add('wrong');
+    } else {
+      btn.addEventListener('click', () => selectAnswer(i));
     }
 
-    btn.onclick = () => selectAnswer(i);
     optList.appendChild(btn);
   });
 
-  document.getElementById('btn-prev').disabled = currentQ === 0;
+  const prevBtn = document.getElementById('btn-prev');
   const nextBtn = document.getElementById('btn-next');
+  if (prevBtn) prevBtn.disabled = currentQ === 0;
 
-  if (currentQ === currentQuiz.length - 1) {
-    nextBtn.innerHTML = 'Submit <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
-    nextBtn.onclick = submitQuiz;
-  } else {
-    nextBtn.innerHTML = 'Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
-    nextBtn.onclick = nextQ;
+  if (nextBtn) {
+    const isLast = currentQ === total - 1;
+    nextBtn.innerHTML = isLast
+      ? `Submit <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`
+      : `Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+    nextBtn.onclick = isLast ? submitQuiz : nextQ;
+    nextBtn.setAttribute('aria-label', isLast ? 'Submit quiz' : 'Next question');
   }
 }
 
@@ -313,22 +391,12 @@ function selectAnswer(index) {
   if (userAnswers[currentQ] !== null) return;
   userAnswers[currentQ] = index;
 
-  const q = currentQuiz[currentQ];
-  const btns = document.querySelectorAll('.option-btn');
-
+  const q    = currentQuiz[currentQ];
+  const btns = document.querySelectorAll('#options-list .option-btn');
   btns.forEach((btn, i) => {
-    btn.classList.add('answered');
-    if (i === q.answer) btn.classList.add('correct');
+    btn.disabled = true;
+    if (i === q.answer)  btn.classList.add('correct');
     else if (i === index) btn.classList.add('wrong');
-
-    // Show explanation right next to each option
-    if (q.explanations && q.explanations[i]) {
-      const expDiv = document.createElement('div');
-      expDiv.className = 'option-explanation ' +
-        (i === q.answer ? 'opt-exp-correct' : 'opt-exp-wrong');
-      expDiv.textContent = q.explanations[i];
-      btn.after(expDiv);
-    }
   });
 }
 
@@ -346,67 +414,71 @@ function prevQ() {
   }
 }
 
+/* ─────────────────────────────────────────
+   Submit & results
+───────────────────────────────────────── */
 function submitQuiz() {
   let score = 0;
-  currentQuiz.forEach((q, i) => {
-    if (userAnswers[i] === q.answer) score++;
-  });
+  currentQuiz.forEach((q, i) => { if (userAnswers[i] === q.answer) score++; });
 
-  const total = currentQuiz.length;
+  const total   = currentQuiz.length;
   const percent = Math.round((score / total) * 100);
 
   saveQuizResult(score, total, percent);
 
-  document.getElementById('quiz-active').style.display = 'none';
-  document.getElementById('quiz-results').style.display = 'block';
+  hideSection('quiz-active');
+  showSection('quiz-results');
 
-  const iconEl = document.getElementById('result-icon');
-  if (percent >= 80) iconEl.textContent = '🏆';
-  else if (percent >= 60) iconEl.textContent = '👍';
-  else if (percent >= 40) iconEl.textContent = '📚';
-  else iconEl.textContent = '💪';
+  setText('result-icon',
+    percent >= 80 ? '🏆' :
+    percent >= 60 ? '👍' :
+    percent >= 40 ? '📚' : '💪'
+  );
 
-  document.getElementById('result-score').textContent = score + ' / ' + total;
-  document.getElementById('result-percent').textContent = percent + '%';
+  setText('result-score',   `${score} / ${total}`);
+  setText('result-percent', `${percent}%`);
+  setText('result-msg',
+    percent >= 80 ? 'Excellent! You are ready for the exam.'        :
+    percent >= 60 ? 'Good work! Keep practising.'                   :
+    percent >= 40 ? 'Keep studying. You can do better!'             :
+    'Do not give up. Read the chapter again and retry.'
+  );
 
-  const msg = percent >= 80 ? 'Excellent! You are ready for the exam.' :
-              percent >= 60 ? 'Good work! Keep practising.' :
-              percent >= 40 ? 'Keep studying. You can do better!' :
-              'Do not give up. Read the chapter again and retry.';
-  document.getElementById('result-msg').textContent = msg;
-
-  showBreakdown();
+  renderBreakdown();
 }
 
-function showBreakdown() {
+function renderBreakdown() {
   const container = document.getElementById('result-breakdown');
   if (!container) return;
   container.innerHTML = '';
 
-  currentQuiz.forEach((q, i) => {
-    const correct = userAnswers[i] === q.answer;
-    const item = document.createElement('div');
-    item.className = 'breakdown-item ' + (correct ? 'correct-item' : 'wrong-item');
+  const frag = document.createDocumentFragment();
 
-    const yourAns = userAnswers[i] !== null ? q.options[userAnswers[i]] : 'Not answered';
+  currentQuiz.forEach((q, i) => {
+    const correct    = userAnswers[i] === q.answer;
+    const yourAns    = userAnswers[i] !== null ? q.options[userAnswers[i]] : 'Not answered';
     const correctAns = q.options[q.answer];
 
-    item.innerHTML = `
+    const item       = document.createElement('div');
+    item.className   = `breakdown-item ${correct ? 'correct-item' : 'wrong-item'}`;
+    item.innerHTML   = `
       <div>
-        <div class="bi-q">${i + 1}. ${q.q}</div>
-        ${!correct ?
-          `<div class="bi-ans wrong-ans">Your answer: ${yourAns}</div>
-           <div class="bi-ans correct-ans">Correct: ${correctAns}</div>
-           ${q.explanation ? `<div class="bi-ans" style="color:#9ca3af;margin-top:4px">💡 ${q.explanation}</div>` : ''}` :
-          `<div class="bi-ans correct-ans">✓ Correct</div>
-           ${q.explanation ? `<div class="bi-ans" style="color:#9ca3af;margin-top:4px">💡 ${q.explanation}</div>` : ''}`
+        <div class="bi-q">${i + 1}. ${escapeHTML(q.q)}</div>
+        ${correct
+          ? `<div class="bi-ans correct-ans">✓ Correct</div>`
+          : `<div class="bi-ans wrong-ans">Your answer: ${escapeHTML(yourAns)}</div>
+             <div class="bi-ans correct-ans">Correct: ${escapeHTML(correctAns)}</div>`
         }
-      </div>
-    `;
-    container.appendChild(item);
+      </div>`;
+    frag.appendChild(item);
   });
+
+  container.appendChild(frag);
 }
 
+/* ─────────────────────────────────────────
+   Save result (Firebase + local backup)
+───────────────────────────────────────── */
 async function saveQuizResult(score, total, percent) {
   const result = {
     subject:   quizMeta.subject,
@@ -414,7 +486,7 @@ async function saveQuizResult(score, total, percent) {
     level:     quizMeta.level,
     score, total, percent,
     questions: currentQuiz,
-    date:      new Date().toLocaleDateString('en-PK')
+    date:      new Date().toLocaleDateString('en-PK'),
   };
 
   const uid = localStorage.getItem('acron_uid');
@@ -422,103 +494,72 @@ async function saveQuizResult(score, total, percent) {
     try {
       await firebaseSaveQuiz(uid, result);
     } catch (err) {
-      console.log('Error saving quiz:', err);
+      console.error('[Quiz] Error saving to Firebase:', err);
     }
   }
 
-  const saved = localStorage.getItem('acron_user');
-  if (saved) {
-    const user = JSON.parse(saved);
-    if (!user.quizHistory) user.quizHistory = [];
-    user.quizHistory = user.quizHistory.filter(q =>
-      !(q.subject === result.subject &&
-        q.chapter == result.chapter &&
-        q.level === result.level)
-    );
-    user.quizHistory.push(result);
-    localStorage.setItem('acron_user', JSON.stringify(user));
+  // Local backup — replace any previous attempt of same subject/chapter/level
+  try {
+    const user = getLocalUser();
+    if (user) {
+      const history = Array.isArray(user.quizHistory)
+        ? user.quizHistory
+        : Object.values(user.quizHistory ?? {});
+
+      user.quizHistory = history.filter(q =>
+        !(q.subject === result.subject &&
+          String(q.chapter) === String(result.chapter) &&
+          q.level === result.level)
+      );
+      user.quizHistory.push(result);
+      localStorage.setItem('acron_user', JSON.stringify(user));
+    }
+  } catch (err) {
+    console.error('[Quiz] Error saving local backup:', err);
   }
 }
 
-function showRetryOptions() {
-  const resultCard = document.querySelector('.results-card');
-  if (!resultCard) return;
-
-  // Remove old explanations
-  document.querySelectorAll('.option-explanation').forEach(e => e.remove());
-
-  const div = document.createElement('div');
-  div.id = 'retry-options';
-  div.innerHTML = `
-    <div style="
-      background:rgba(108,99,255,0.08);
-      border:1px solid rgba(108,99,255,0.2);
-      border-radius:14px;
-      padding:1.2rem;
-      margin-top:1rem;
-      text-align:center;
-    ">
-      <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:6px">
-        What do you want to do?
-      </div>
-      <div style="font-size:13px;color:#9ca3af;margin-bottom:1rem">
-        آپ کیا کرنا چاہتے ہیں؟
-      </div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button onclick="retrySameQuiz()" style="
-          padding:10px 20px;border-radius:10px;
-          background:rgba(108,99,255,0.15);
-          border:1px solid rgba(108,99,255,0.3);
-          color:#a78bfa;font-size:13px;font-weight:700;
-          font-family:Nunito,sans-serif;cursor:pointer;
-        ">
-          🔄 Retry same quiz
-        </button>
-        <button onclick="newQuiz()" style="
-          padding:10px 20px;border-radius:10px;
-          background:linear-gradient(135deg,#6c63ff,#a855f7);
-          border:none;
-          color:#fff;font-size:13px;font-weight:700;
-          font-family:Nunito,sans-serif;cursor:pointer;
-        ">
-          ✨ Generate new quiz
-        </button>
-      </div>
-    </div>
-  `;
-
-  // Add after result buttons
-  const resultBtns = document.querySelector('.result-btns');
-  if (resultBtns) resultBtns.after(div);
-}
-
-function retrySameQuiz() {
-  currentQ = 0;
+/* ─────────────────────────────────────────
+   Retry / new quiz
+───────────────────────────────────────── */
+function retryQuiz() {
+  currentQ    = 0;
   userAnswers = new Array(currentQuiz.length).fill(null);
-  document.getElementById('quiz-results').style.display = 'none';
-  document.getElementById('quiz-active').style.display = 'block';
+  hideSection('quiz-results');
+  showSection('quiz-active');
   renderQuestion();
 }
 
 function newQuiz() {
-  document.getElementById('quiz-results').style.display = 'none';
-  document.getElementById('quiz-setup').style.display = 'block';
-  currentQuiz = [];
-  currentQ = 0;
-  userAnswers = [];
-  quizMeta = {};
+  hideSection('quiz-results');
+  showSection('quiz-setup');
+  currentQuiz  = [];
+  currentQ     = 0;
+  userAnswers  = [];
+  quizMeta     = {};
+
+  document.querySelectorAll('.level-card').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-checked', 'false');
+  });
+  checkGenBtn();
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  initQuiz();
-});
+/* ─────────────────────────────────────────
+   Boot
+───────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', initQuiz);
 
-window.initQuiz = initQuiz;
-window.loadChapters = loadChapters;
-window.selectLevel = selectLevel;
+/* ─────────────────────────────────────────
+   Exports (for inline onclick handlers
+   still present in the HTML)
+───────────────────────────────────────── */
+window.initQuiz        = initQuiz;
+window.loadChapters    = loadChapters;
+window.selectLevel     = selectLevel;
 window.generateNewQuiz = generateNewQuiz;
-window.loadOldQuiz = loadOldQuiz;
-window.retryQuiz = retryQuiz;
-window.newQuiz = newQuiz;
-window.prevQ = prevQ;
-window.nextQ = nextQ;
+window.loadOldQuiz     = loadOldQuiz;
+window.retryQuiz       = retryQuiz;
+window.newQuiz         = newQuiz;
+window.prevQ           = prevQ;
+window.nextQ           = nextQ;

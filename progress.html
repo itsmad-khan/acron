@@ -7,24 +7,280 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="CSS/style.css"/>
+<style>
+  :root {
+    --bg:           #0d0f1a;
+    --bg-2:         #131629;
+    --surface:      #1a1e32;
+    --surface-2:    #1f2438;
+    --border:       rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.13);
+    --text-primary:   #f0f2ff;
+    --text-secondary: #8b92b8;
+    --text-muted:     #525878;
+    --accent:       #7c6cf0;
+    --accent-light: #9d90f5;
+    --teal:         #34d399;
+    --amber:        #fbbf24;
+    --rose:         #f87171;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --transition: 200ms cubic-bezier(0.4,0,0.2,1);
+  }
 
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-8YTGSYM38H');
-</script>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+
+  /* ── Navbar ── */
+  .navbar {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 64px;
+    background: rgba(13,15,26,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--accent), #5b4dd4);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    color: #fff; box-shadow: 0 4px 12px rgba(124,108,240,0.4);
+  }
+  .logo-name { display: block; font-size: 17px; font-weight: 800; color: var(--text-primary); line-height: 1.1; letter-spacing: -0.3px; }
+  .logo-urdu { display: block; font-size: 11px; color: var(--text-secondary); line-height: 1; }
+  .nav-right { display: flex; align-items: center; gap: 8px; }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-secondary); display: flex; align-items: center;
+    justify-content: center; cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+  .theme-toggle:hover { background: var(--surface-2); color: var(--text-primary); }
+  .lang-switch {
+    display: flex; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 2px;
+  }
+  .lang-btn {
+    padding: 4px 12px; border-radius: 6px; border: none;
+    background: transparent; color: var(--text-secondary);
+    font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background var(--transition), color var(--transition);
+  }
+  .lang-btn.active { background: var(--accent); color: #fff; }
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-secondary); font-size: 13px; font-weight: 700;
+    text-decoration: none; min-height: 36px;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+  }
+  .back-link:hover { background: var(--surface-2); color: var(--text-primary); border-color: var(--border-hover); }
+
+  /* ── Main ── */
+  .progress-main {
+    position: relative; z-index: 1;
+    max-width: 900px; margin: 0 auto;
+    padding: 36px 24px 80px;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+
+  /* ── Header ── */
+  .progress-header { display: flex; flex-direction: column; gap: 4px; }
+  .progress-title {
+    font-size: clamp(24px, 4vw, 30px); font-weight: 800;
+    color: var(--text-primary); letter-spacing: -0.6px;
+  }
+  .progress-sub { font-size: 15px; color: var(--text-secondary); font-weight: 500; }
+  .progress-urdu { font-size: 13px; color: var(--text-muted); direction: rtl; font-weight: 500; }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 18px;
+    display: flex; flex-direction: column; gap: 10px;
+    position: relative; overflow: hidden;
+    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    opacity: 0; transition: opacity var(--transition);
+  }
+  .stat-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .stat-card:hover::before { opacity: 1; }
+  .stat-card:nth-child(1)::before { background: linear-gradient(90deg, var(--accent), var(--accent-light)); }
+  .stat-card:nth-child(2)::before { background: linear-gradient(90deg, var(--teal), #6ee7b7); }
+  .stat-card:nth-child(3)::before { background: linear-gradient(90deg, var(--amber), #fde68a); }
+  .stat-card:nth-child(4)::before { background: linear-gradient(90deg, var(--rose), #fca5a5); }
+
+  .stat-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stat-icon.purple { background: rgba(124,108,240,0.15); color: var(--accent-light); }
+  .stat-icon.teal   { background: rgba(52,211,153,0.15);  color: var(--teal); }
+  .stat-icon.amber  { background: rgba(251,191,36,0.15);  color: var(--amber); }
+  .stat-icon.rose   { background: rgba(248,113,113,0.12); color: var(--rose); }
+
+  .stat-num { font-size: 28px; font-weight: 800; color: var(--text-primary); line-height: 1; letter-spacing: -0.8px; }
+  .stat-label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+
+  /* ── Section wrapper ── */
+  .prog-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 26px 28px;
+    display: flex; flex-direction: column; gap: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+
+  .prog-section-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; font-weight: 700;
+    color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.7px;
+  }
+  .prog-section-title svg { color: var(--accent-light); flex-shrink: 0; }
+
+  /* ── Subject bars ── */
+  .subject-bar-item {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .subject-bar-top {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .subject-bar-name {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 700; color: var(--text-primary);
+  }
+  .subject-bar-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .subject-bar-score {
+    font-size: 13px; font-weight: 700; color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .subject-bar-track {
+    height: 8px; background: var(--bg-2);
+    border-radius: 6px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .subject-bar-fill {
+    height: 100%; border-radius: 6px;
+    transition: width 800ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ── History filters ── */
+  .history-filters {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .filter-btn {
+    padding: 6px 14px; border-radius: 20px;
+    border: 1px solid var(--border); background: var(--bg-2);
+    color: var(--text-secondary); font-family: 'Nunito', sans-serif;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+    min-height: 34px;
+  }
+  .filter-btn:hover { background: var(--surface-2); border-color: var(--border-hover); color: var(--text-primary); }
+  .filter-btn.active {
+    background: rgba(124,108,240,0.15);
+    border-color: var(--accent);
+    color: var(--accent-light);
+  }
+
+  /* ── History list ── */
+  #full-history { display: flex; flex-direction: column; gap: 10px; }
+
+  .history-item {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 14px 18px;
+    transition: border-color var(--transition), background var(--transition);
+  }
+  .history-item:hover { border-color: var(--border-hover); background: var(--surface-2); }
+
+  .history-score-badge {
+    width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+  }
+  .history-score-badge.good   { background: rgba(52,211,153,0.12);  color: var(--teal); }
+  .history-score-badge.mid    { background: rgba(251,191,36,0.12);  color: var(--amber); }
+  .history-score-badge.low    { background: rgba(248,113,113,0.12); color: var(--rose); }
+
+  .history-info { flex: 1; min-width: 0; }
+  .history-subject { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .history-meta { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+
+  .history-right { text-align: right; flex-shrink: 0; }
+  .history-percent { font-size: 16px; font-weight: 800; color: var(--text-primary); }
+  .history-date { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+
+  /* ── Empty state ── */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 10px; padding: 40px 20px; text-align: center;
+    color: var(--text-muted);
+  }
+  .empty-state p { font-size: 14px; font-weight: 600; max-width: 280px; line-height: 1.5; }
+  .empty-state .urdu { direction: rtl; font-size: 13px; color: var(--accent-light); }
+
+  /* ── Light mode ── */
+  body.light-mode {
+    --bg: #f4f6fb; --bg-2: #eef0f7; --surface: #ffffff; --surface-2: #f0f2fa;
+    --border: rgba(0,0,0,0.08); --border-hover: rgba(0,0,0,0.14);
+    --text-primary: #1a1d2e; --text-secondary: #5a6080; --text-muted: #9ba3c0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .prog-section { padding: 20px 18px; }
+    .navbar { padding: 0 16px; }
+    .progress-main { padding: 24px 14px 60px; }
+  }
+
+  @media (max-width: 400px) {
+    .stats-row { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+</style>
 </head>
 <body>
 
 <div class="stars" id="stars"></div>
 
-<nav class="navbar">
-  <div class="logo">
-    <div class="logo-icon">
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <a href="dashboard.html" class="logo" aria-label="Acron home">
+    <div class="logo-icon" aria-hidden="true">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 2L2 7l10 5 10-5-10-5z"/>
         <path d="M2 17l10 5 10-5"/>
@@ -32,34 +288,33 @@
       </svg>
     </div>
     <div>
-      <span class="logo-name">Acron</span></span>
+      <span class="logo-name">Acron</span>
       <span class="logo-urdu">علم کی راہ</span>
     </div>
-  </div>
+  </a>
   <div class="nav-right">
-    <div class="lang-switch">
-      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Switch theme">
-        <svg id="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-        <svg id="theme-icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
-          <circle cx="12" cy="12" r="5"/>
-          <line x1="12" y1="1" x2="12" y2="3"/>
-          <line x1="12" y1="21" x2="12" y2="23"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-          <line x1="1" y1="12" x2="3" y2="12"/>
-          <line x1="21" y1="12" x2="23" y2="12"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-        </svg>
-      </button>
-      <button class="lang-btn active" onclick="setLang('en')" id="btn-en">English</button>
-      <button class="lang-btn" onclick="setLang('ur')" id="btn-ur">اردو</button>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg id="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+      <svg id="theme-icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none" aria-hidden="true">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+    </button>
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button class="lang-btn active" onclick="setLang('en')" id="btn-en" aria-pressed="true">English</button>
+      <button class="lang-btn" onclick="setLang('ur')" id="btn-ur" aria-pressed="false">اردو</button>
     </div>
-    <a href="dashboard.html" class="back-link">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2">
+    <a href="dashboard.html" class="back-link" aria-label="Back to Dashboard">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M19 12H5M12 19l-7-7 7-7"/>
       </svg>
       Dashboard
@@ -67,116 +322,144 @@
   </div>
 </nav>
 
-<main class="progress-main">
+<main class="progress-main" id="main-content">
 
+  <!-- Header -->
   <div class="progress-header">
     <h1 class="progress-title">My Progress</h1>
     <p class="progress-sub" id="progress-sub">See how you are doing in every subject</p>
     <p class="progress-urdu">اپنی ترقی دیکھیں</p>
   </div>
 
-  <!-- Overall Stats -->
-  <div class="stats-row" style="margin-bottom:2rem">
+  <!-- Stats row -->
+  <div class="stats-row" role="region" aria-label="Overall statistics">
     <div class="stat-card">
-      <div class="stat-icon purple">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2">
+      <div class="stat-icon purple" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 11l3 3L22 4"/>
           <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
         </svg>
       </div>
-      <div class="stat-num" id="prog-total">0</div>
+      <div class="stat-num" id="prog-total" aria-label="Total quizzes">0</div>
       <div class="stat-label">Total quizzes</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon teal">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2">
+      <div class="stat-icon teal" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
       </div>
-      <div class="stat-num" id="prog-avg">—</div>
+      <div class="stat-num" id="prog-avg" aria-label="Average score">—</div>
       <div class="stat-label">Average score</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon amber">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02
-            12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      <div class="stat-icon amber" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
         </svg>
       </div>
-      <div class="stat-num" id="prog-best">—</div>
+      <div class="stat-num" id="prog-best" aria-label="Best score">—</div>
       <div class="stat-label">Best score</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon" style="background:rgba(248,113,113,0.12);color:#f87171">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2">
+      <div class="stat-icon rose" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
         </svg>
       </div>
-      <div class="stat-num" id="prog-chapters">0</div>
+      <div class="stat-num" id="prog-chapters" aria-label="Chapters read">0</div>
       <div class="stat-label">Chapters read</div>
     </div>
   </div>
 
-  <!-- Subject wise progress -->
-  <div class="prog-section">
-    <div class="prog-section-title">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2">
+  <!-- Score by subject -->
+  <div class="prog-section" role="region" aria-label="Score by subject">
+    <div class="prog-section-title" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
       Score by subject
     </div>
-    <div id="subject-bars"></div>
+    <!-- progress.js renders .subject-bar-item elements here.
+         Recommended structure per item:
+         <div class="subject-bar-item">
+           <div class="subject-bar-top">
+             <span class="subject-bar-name">
+               <span class="subject-bar-dot" style="background: COLOR"></span>
+               Subject Name
+             </span>
+             <span class="subject-bar-score">7 / 10 quizzes</span>
+           </div>
+           <div class="subject-bar-track">
+             <div class="subject-bar-fill" style="width: PCT%; background: COLOR"></div>
+           </div>
+         </div>
+    -->
+    <div id="subject-bars" role="list" aria-label="Subject progress bars"></div>
   </div>
 
-  <!-- Full quiz history -->
-  <div class="prog-section">
-    <div class="prog-section-title">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2">
+  <!-- Quiz history -->
+  <div class="prog-section" role="region" aria-label="Quiz history">
+    <div class="prog-section-title" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
         <path d="M3 3v5h5"/>
       </svg>
       All quiz history
     </div>
 
-    <div class="history-filters">
-      <button class="filter-btn active" onclick="filterHistory('all', this)">All</button>
-      <button class="filter-btn" onclick="filterHistory('Physics', this)">Physics</button>
-      <button class="filter-btn" onclick="filterHistory('Chemistry', this)">Chemistry</button>
-      <button class="filter-btn" onclick="filterHistory('Biology', this)">Biology</button>
-      <button class="filter-btn" onclick="filterHistory('Mathematics', this)">Maths</button>
-      <button class="filter-btn" onclick="filterHistory('English', this)">English</button>
+    <div class="history-filters" role="group" aria-label="Filter by subject">
+      <button class="filter-btn active" onclick="filterHistory('all', this)" aria-pressed="true">All</button>
+      <button class="filter-btn" onclick="filterHistory('Physics', this)" aria-pressed="false">Physics</button>
+      <button class="filter-btn" onclick="filterHistory('Chemistry', this)" aria-pressed="false">Chemistry</button>
+      <button class="filter-btn" onclick="filterHistory('Biology', this)" aria-pressed="false">Biology</button>
+      <button class="filter-btn" onclick="filterHistory('Mathematics', this)" aria-pressed="false">Maths</button>
+      <button class="filter-btn" onclick="filterHistory('English', this)" aria-pressed="false">English</button>
     </div>
 
-    <div id="full-history"></div>
+    <!-- progress.js renders .history-item elements here.
+         Recommended structure per item:
+         <div class="history-item">
+           <div class="history-score-badge good|mid|low">85%</div>
+           <div class="history-info">
+             <div class="history-subject">Physics — Chapter 3</div>
+             <div class="history-meta">10 questions · Medium · 4 min</div>
+           </div>
+           <div class="history-right">
+             <div class="history-percent">8 / 10</div>
+             <div class="history-date">Jun 8, 2026</div>
+           </div>
+         </div>
+    -->
+    <div id="full-history" role="list" aria-label="Quiz history list"></div>
 
-    <div class="empty-state" id="no-history" style="display:none">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="1.5">
+    <div class="empty-state" id="no-history" style="display:none" role="status">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
         <path d="M9 11l3 3L22 4"/>
         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
       </svg>
       <p>No quizzes yet. Go to a subject and start your first quiz!</p>
-      <p style="color:#6c63ff;direction:rtl;margin-top:6px;font-size:13px;">
-        ابھی تک کوئی کوئز نہیں
-      </p>
+      <p class="urdu">ابھی تک کوئی کوئز نہیں</p>
     </div>
   </div>
 
 </main>
 
-<script src="JS/config.js"></script>
 <script src="JS/lang.js"></script>
-<script src="JS/security.js"></script>
-<script type="module" src="JS/firebase-config.js"></script>
-<script type="module" src="JS/progress.js"></script>
-<script>generateStars();</script>
-<script src="JS/bug-report.js"></script>
+<script src="JS/progress.js"></script>
+<script src="JS/config.js"></script>
+<script>
+  if (typeof generateStars === 'function') generateStars();
+  if (typeof initProgress  === 'function') initProgress();
+
+  // Sync aria-pressed on filter buttons
+  const _origFilter = window.filterHistory;
+  window.filterHistory = function(subject, btn) {
+    if (_origFilter) _origFilter(subject, btn);
+    document.querySelectorAll('.filter-btn').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    if (btn) btn.setAttribute('aria-pressed', 'true');
+  };
+</script>
 </body>
 </html>

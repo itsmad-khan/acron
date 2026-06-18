@@ -1,58 +1,89 @@
-let selBoard = null, selClass = null;
+/* ============================================================
+   welcome.js — landing page board/class selection
+   ============================================================ */
 
+/* ─────────────────────────────────────────
+   State
+───────────────────────────────────────── */
+let selBoard = null;
+let selClass = null;
+
+/* ─────────────────────────────────────────
+   Helpers
+───────────────────────────────────────── */
+function _setBoardsEnabled(enabled) {
+  const grid = document.getElementById('boards-grid');
+  if (!grid) return;
+  grid.style.opacity       = enabled ? '1' : '0.4';
+  grid.style.pointerEvents = enabled ? 'all' : 'none';
+  grid.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+
+  // Keep board radios out of tab order while disabled
+  grid.querySelectorAll('.board-item').forEach(item => {
+    item.tabIndex = enabled ? 0 : -1;
+  });
+}
+
+function _syncRadioState(selector, selectedEl) {
+  document.querySelectorAll(selector).forEach(el => {
+    const isSelected = el === selectedEl;
+    el.classList.toggle('selected', isSelected);
+    el.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+  });
+}
+
+/* ─────────────────────────────────────────
+   Board selection
+───────────────────────────────────────── */
 function selectBoard(el, val) {
-  document.querySelectorAll('.board-item').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
+  _syncRadioState('.board-item', el);
   selBoard = val;
   updateContinueBtn();
 }
 
+/* ─────────────────────────────────────────
+   Class selection
+───────────────────────────────────────── */
 function selectClass(el, val) {
-  document.querySelectorAll('.class-item').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
+  _syncRadioState('.class-item', el);
   selClass = val;
 
-  // If Other selected deselect board
   if (val === 'other') {
-    document.querySelectorAll('.board-item').forEach(c => c.classList.remove('selected'));
+    // "Other / Senior" doesn't need a board — clear and lock board selection
+    _syncRadioState('.board-item', null);
     selBoard = null;
-
-    // Grey out board section
-    document.getElementById('boards-grid').style.opacity = '0.4';
-    document.getElementById('boards-grid').style.pointerEvents = 'none';
+    _setBoardsEnabled(false);
   } else {
-    // Re enable board selection
-    document.getElementById('boards-grid').style.opacity = '1';
-    document.getElementById('boards-grid').style.pointerEvents = 'all';
+    _setBoardsEnabled(true);
   }
 
   updateContinueBtn();
 }
 
+/* ─────────────────────────────────────────
+   Continue button state
+───────────────────────────────────────── */
 function updateContinueBtn() {
   const btn = document.getElementById('cont-btn');
   const txt = document.getElementById('txt-cont');
+  if (!btn || !txt) return;
 
-  // Other/Senior does not need board selection
-  if (selClass === 'other') {
-    btn.removeAttribute('disabled');
-    txt.textContent = t('txt-cont-ready');
-    return;
-  }
+  // Senior students skip board selection entirely
+  const ready = selClass === 'other'
+    ? true
+    : !!(selBoard && selClass);
 
-  if (selBoard && selClass) {
-    btn.removeAttribute('disabled');
-    txt.textContent = t('txt-cont-ready');
-  } else {
-    btn.setAttribute('disabled', true);
-    txt.textContent = t('txt-cont');
-  }
+  btn.toggleAttribute('disabled', !ready);
+  btn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+  txt.textContent = ready ? t('txt-cont-ready') : t('txt-cont');
 }
 
+/* ─────────────────────────────────────────
+   Continue to signup
+───────────────────────────────────────── */
 function goToSignup() {
   if (!selClass) return;
 
-  // If other/senior selected skip board selection
   if (selClass === 'other') {
     localStorage.setItem('acron_board', 'none');
     localStorage.setItem('acron_class', 'other');
@@ -61,11 +92,24 @@ function goToSignup() {
   }
 
   if (!selBoard) return;
+
   localStorage.setItem('acron_board', selBoard);
   localStorage.setItem('acron_class', selClass);
   window.location.href = 'signup.html';
 }
 
-function onLangChange(lang) {
+/* ─────────────────────────────────────────
+   Language change hook (called by lang.js)
+───────────────────────────────────────── */
+function onLangChange() {
   updateContinueBtn();
 }
+
+/* ─────────────────────────────────────────
+   Exports
+───────────────────────────────────────── */
+window.selectBoard      = selectBoard;
+window.selectClass      = selectClass;
+window.goToSignup       = goToSignup;
+window.updateContinueBtn = updateContinueBtn;
+window.onLangChange     = onLangChange;
