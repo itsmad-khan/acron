@@ -7,146 +7,478 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="CSS/style.css"/>
+<style>
+  :root {
+    --bg:           #0d0f1a;
+    --bg-2:         #131629;
+    --surface:      #1a1e32;
+    --surface-2:    #1f2438;
+    --border:       rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.13);
+    --text-primary:   #f0f2ff;
+    --text-secondary: #8b92b8;
+    --text-muted:     #525878;
+    --accent:       #7c6cf0;
+    --accent-light: #9d90f5;
+    --teal:         #34d399;
+    --amber:        #fbbf24;
+    --rose:         #f87171;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+    --transition: 200ms cubic-bezier(0.4,0,0.2,1);
+  }
 
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-8YTGSYM38H');
-</script>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+
+  /* ── Navbar ── */
+  .navbar {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 64px;
+    background: rgba(13,15,26,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--accent), #5b4dd4);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    color: #fff; box-shadow: 0 4px 12px rgba(124,108,240,0.4);
+  }
+  .logo-name { display: block; font-size: 17px; font-weight: 800; color: var(--text-primary); line-height: 1.1; letter-spacing: -0.3px; }
+  .logo-urdu { display: block; font-size: 11px; color: var(--text-secondary); line-height: 1; }
+  .nav-right { display: flex; align-items: center; gap: 8px; }
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-secondary); display: flex; align-items: center;
+    justify-content: center; cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+  .theme-toggle:hover { background: var(--surface-2); color: var(--text-primary); }
+  .lang-switch {
+    display: flex; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 2px;
+  }
+  .lang-btn {
+    padding: 4px 12px; border-radius: 6px; border: none;
+    background: transparent; color: var(--text-secondary);
+    font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background var(--transition), color var(--transition);
+  }
+  .lang-btn.active { background: var(--accent); color: #fff; }
+
+  /* ── Auth layout ── */
+  .auth-main {
+    position: relative; z-index: 1;
+    min-height: calc(100vh - 64px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 16px;
+  }
+
+  .auth-card {
+    width: 100%; max-width: 440px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 36px 32px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  }
+
+  /* ── Card top ── */
+  .auth-top {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; margin-bottom: 22px; text-align: center;
+  }
+  .auth-icon {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: rgba(124,108,240,0.12);
+    border: 1px solid rgba(124,108,240,0.2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent-light); margin-bottom: 4px;
+  }
+  .auth-title { font-size: 21px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.4px; }
+  .auth-sub   { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+
+  /* ── Selected board/class pill ── */
+  .selected-info {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(52,211,153,0.08);
+    border: 1px solid rgba(52,211,153,0.22);
+    color: var(--teal); border-radius: var(--radius-sm);
+    padding: 9px 14px; font-size: 13px; font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .selected-info svg { flex-shrink: 0; }
+
+  /* ── Form groups ── */
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+
+  .form-label {
+    font-size: 13px; font-weight: 700;
+    color: var(--text-secondary); letter-spacing: 0.2px;
+  }
+
+  .input-wrap { position: relative; display: flex; align-items: center; }
+
+  .input-icon {
+    position: absolute; left: 13px;
+    color: var(--text-muted); pointer-events: none;
+    transition: color var(--transition);
+  }
+  .input-wrap:focus-within .input-icon { color: var(--accent-light); }
+
+  .form-input {
+    width: 100%; background: var(--bg-2);
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 11px 14px 11px 40px;
+    color: var(--text-primary); font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 500; outline: none; min-height: 46px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .form-input::placeholder { color: var(--text-muted); }
+  .form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,108,240,0.15);
+  }
+  .form-input.error { border-color: var(--rose); box-shadow: 0 0 0 3px rgba(248,113,113,0.12); }
+
+  /* Password right padding for eye btn */
+  #inp-pass, #inp-pass2 { padding-right: 48px; }
+
+  .eye-btn {
+    position: absolute; right: 12px;
+    width: 32px; height: 32px; border-radius: 7px;
+    border: none; background: transparent;
+    color: var(--text-muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: color var(--transition), background var(--transition);
+  }
+  .eye-btn:hover { color: var(--text-secondary); background: var(--surface); }
+
+  /* ── Password strength ── */
+  .strength-bar {
+    height: 4px; background: var(--surface-2);
+    border-radius: 4px; overflow: hidden; margin-top: 6px;
+  }
+  .strength-fill {
+    height: 100%; border-radius: 4px; width: 0;
+    transition: width 300ms ease, background 300ms ease;
+  }
+  .strength-label {
+    font-size: 11px; font-weight: 700; margin-top: 4px;
+    display: block; min-height: 16px;
+    transition: color var(--transition);
+  }
+
+  .field-error {
+    font-size: 12px; font-weight: 600; color: var(--rose);
+    min-height: 16px; display: block;
+  }
+
+  /* ── Study medium ── */
+  .medium-select-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .medium-btns {
+    display: flex; background: var(--bg-2);
+    border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 2px;
+  }
+  .medium-btn {
+    padding: 5px 14px; border-radius: 6px; border: none;
+    background: transparent; color: var(--text-secondary);
+    font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; min-height: 34px;
+    transition: background var(--transition), color var(--transition);
+  }
+  .medium-btn.active { background: var(--accent); color: #fff; }
+
+  /* ── Step indicator ── */
+  .step-indicator {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; margin-bottom: 20px;
+  }
+  .step-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border-hover);
+    transition: background var(--transition), width var(--transition);
+  }
+  .step-dot.active { background: var(--accent); width: 20px; border-radius: 4px; }
+  .step-dot.done   { background: var(--teal); }
+
+  /* ── Submit button ── */
+  .submit-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px 24px; margin-top: 4px;
+    border-radius: var(--radius-md); border: none;
+    background: linear-gradient(135deg, var(--accent), #5b4dd4);
+    color: #fff; font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 800; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(124,108,240,0.4);
+    min-height: 50px;
+    transition: opacity var(--transition), transform var(--transition), box-shadow var(--transition);
+  }
+  .submit-btn:disabled {
+    background: var(--surface-2); color: var(--text-muted);
+    cursor: not-allowed; box-shadow: none; opacity: 1;
+  }
+  .submit-btn:not(:disabled):hover {
+    opacity: 0.92; transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(124,108,240,0.5);
+  }
+  .submit-btn:not(:disabled):active { transform: translateY(0); }
+
+  /* Loading spinner inside button */
+  .btn-spinner {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    animation: spin 0.7s linear infinite;
+    display: none; flex-shrink: 0;
+  }
+  .submit-btn.loading .btn-spinner { display: block; }
+  .submit-btn.loading .btn-label  { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Success message ── */
+  .success-msg {
+    display: none; align-items: center; gap: 10px;
+    background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25);
+    color: var(--teal); border-radius: var(--radius-sm);
+    padding: 12px 16px; font-size: 13px; font-weight: 700;
+    margin-top: 14px; animation: fadeIn 0.3s ease;
+  }
+  .success-msg.visible { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* ── Bottom text ── */
+  .login-text {
+    text-align: center; font-size: 13px;
+    color: var(--text-muted); margin-top: 16px; font-weight: 500;
+  }
+  .login-text a {
+    color: var(--accent-light); font-weight: 700;
+    text-decoration: none; transition: color var(--transition);
+  }
+  .login-text a:hover { color: var(--text-primary); }
+
+  /* ── Light mode ── */
+  body.light-mode {
+    --bg: #f4f6fb; --bg-2: #eef0f7; --surface: #ffffff; --surface-2: #f0f2fa;
+    --border: rgba(0,0,0,0.08); --border-hover: rgba(0,0,0,0.14);
+    --text-primary: #1a1d2e; --text-secondary: #5a6080; --text-muted: #9ba3c0;
+  }
+
+  @media (max-width: 480px) {
+    .auth-card { padding: 26px 18px; border-radius: 18px; }
+    .navbar { padding: 0 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+</style>
 </head>
 <body>
 
 <div class="stars" id="stars"></div>
 
-<nav class="navbar">
-  <div class="logo">
-    <div class="logo-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="logo" aria-label="Acron home">
+    <div class="logo-icon" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
     <div>
-      <span class="logo-name">Acron</span></span>
+      <span class="logo-name">Acron</span>
       <span class="logo-urdu">علم کی راہ</span>
     </div>
-  </div>
+  </a>
   <div class="nav-right">
-    <div class="lang-switch">
-      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Switch theme">
-        <svg id="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-        <svg id="theme-icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
-          <circle cx="12" cy="12" r="5"/>
-          <line x1="12" y1="1" x2="12" y2="3"/>
-          <line x1="12" y1="21" x2="12" y2="23"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-          <line x1="1" y1="12" x2="3" y2="12"/>
-          <line x1="21" y1="12" x2="23" y2="12"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-        </svg>
-      </button>
-      <button class="lang-btn active" onclick="setLang('en')" id="btn-en">English</button>
-      <button class="lang-btn" onclick="setLang('ur')" id="btn-ur">اردو</button>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg id="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+      <svg id="theme-icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none" aria-hidden="true">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+    </button>
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button class="lang-btn active" onclick="setLang('en')" id="btn-en" aria-pressed="true">English</button>
+      <button class="lang-btn" onclick="setLang('ur')" id="btn-ur" aria-pressed="false">اردو</button>
     </div>
   </div>
 </nav>
 
-<main class="auth-main">
-  <div class="auth-card">
+<main class="auth-main" id="main-content">
+  <div class="auth-card" role="region" aria-label="Sign up form">
+
+    <!-- Step indicator (3 steps: board+class → details → done) -->
+    <div class="step-indicator" aria-hidden="true">
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+    </div>
 
     <div class="auth-top">
-      <div class="auth-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      </div>
-      <h2 class="auth-title" id="txt-signup-title">Create your free account</h2>
-      <p class="auth-sub" id="txt-signup-sub">Start studying in less than 1 minute</p>
-    </div>
-
-    <div class="selected-info" id="selected-info">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-      <span id="selected-text">Balochistan Board — Class 12</span>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label" id="lbl-name">Your full name</label>
-      <div class="input-wrap">
-        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div class="auth-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
         </svg>
-        <input type="text" id="inp-name" class="form-input" placeholder="e.g. Ahmed Ali"/>
       </div>
-      <span class="field-error" id="err-name"></span>
+      <h1 class="auth-title" id="txt-signup-title">Create your free account</h1>
+      <p class="auth-sub" id="txt-signup-sub">Start studying in less than 1 minute</p>
     </div>
-    
+
+    <!-- Selected board/class confirmation -->
+    <div class="selected-info" id="selected-info" role="status">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <span id="selected-text">Balochistan Board — Class 12</span>
+    </div>
+
+    <!-- Full name -->
     <div class="form-group">
-      <label class="form-label" id="lbl-email">Email address</label>
+      <label class="form-label" for="inp-name" id="lbl-name">Your full name</label>
       <div class="input-wrap">
-        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <input type="text" id="inp-name" class="form-input"
+               placeholder="e.g. Ahmed Ali"
+               autocomplete="name"
+               aria-required="true"
+               aria-describedby="err-name"/>
+      </div>
+      <span class="field-error" id="err-name" role="alert" aria-live="polite"></span>
+    </div>
+
+    <!-- Email -->
+    <div class="form-group">
+      <label class="form-label" for="inp-email" id="lbl-email">Email address</label>
+      <div class="input-wrap">
+        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
           <polyline points="22,6 12,13 2,6"/>
         </svg>
-        <input type="email" id="inp-email" class="form-input" placeholder="your@email.com"/>
+        <input type="email" id="inp-email" class="form-input"
+               placeholder="your@email.com"
+               autocomplete="email"
+               aria-required="true"
+               aria-describedby="err-email"/>
       </div>
-      <span class="field-error" id="err-email"></span>
+      <span class="field-error" id="err-email" role="alert" aria-live="polite"></span>
     </div>
-    
+
+    <!-- Password -->
     <div class="form-group">
-      <label class="form-label" id="lbl-pass">Password</label>
+      <label class="form-label" for="inp-pass" id="lbl-pass">Password</label>
       <div class="input-wrap">
-        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
-        <input type="password" id="inp-pass" class="form-input" placeholder="Min 6 characters"/>
-        <button class="eye-btn" id="eye-btn" type="button" aria-label="Show password">
-          <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <input type="password" id="inp-pass" class="form-input"
+               placeholder="Min 6 characters"
+               autocomplete="new-password"
+               aria-required="true"
+               aria-describedby="strength-label err-pass"/>
+        <button class="eye-btn" id="eye-btn" type="button"
+                aria-label="Show password" onclick="togglePass()">
+          <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
           </svg>
         </button>
       </div>
-      <div class="strength-bar">
+      <!-- Password strength bar -->
+      <div class="strength-bar" role="progressbar" aria-label="Password strength"
+           aria-valuemin="0" aria-valuemax="100">
         <div class="strength-fill" id="strength-fill"></div>
       </div>
-      <span class="strength-label" id="strength-label"></span>
-      <span class="field-error" id="err-pass"></span>
+      <span class="strength-label" id="strength-label" aria-live="polite"></span>
+      <span class="field-error" id="err-pass" role="alert" aria-live="polite"></span>
     </div>
-    
+
+    <!-- Confirm password -->
     <div class="form-group">
-      <label class="form-label" id="lbl-pass2">Confirm password</label>
+      <label class="form-label" for="inp-pass2" id="lbl-pass2">Confirm password</label>
       <div class="input-wrap">
-        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
-        <input type="password" id="inp-pass2" class="form-input" placeholder="Repeat your password"/>
+        <input type="password" id="inp-pass2" class="form-input"
+               placeholder="Repeat your password"
+               autocomplete="new-password"
+               aria-required="true"
+               aria-describedby="err-pass2"/>
       </div>
-      <span class="field-error" id="err-pass2"></span>
+      <span class="field-error" id="err-pass2" role="alert" aria-live="polite"></span>
     </div>
 
+    <!-- Study medium -->
     <div class="medium-select-row">
       <span class="form-label" id="lbl-medium">Study medium</span>
-      <div class="medium-btns">
-        <button class="medium-btn active" id="med-en" type="button">English</button>
-        <button class="medium-btn" id="med-ur" type="button">اردو</button>
+      <div class="medium-btns" role="group" aria-label="Study medium">
+        <button class="medium-btn active" id="med-en" type="button" aria-pressed="true">English</button>
+        <button class="medium-btn" id="med-ur" type="button" aria-pressed="false">اردو</button>
       </div>
     </div>
 
-    <button class="submit-btn" id="signup-btn" onclick="doSignup()" disabled>
-      <span id="txt-create">Create my account</span>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    <!-- Submit -->
+    <button class="submit-btn" id="signup-btn" onclick="doSignup()" disabled
+            aria-disabled="true">
+      <div class="btn-spinner" aria-hidden="true"></div>
+      <span class="btn-label" style="display:flex;align-items:center;gap:8px">
+        <span id="txt-create">Create my account</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </span>
     </button>
 
-    <div class="success-msg" id="success-msg">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-      <span id="txt-success">Account created! Going to your dashboard...</span>
+    <!-- Success -->
+    <div class="success-msg" id="success-msg" role="status" aria-live="polite">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <span id="txt-success">Account created! Going to your dashboard…</span>
     </div>
 
-    <p class="login-text" id="txt-have-account">Already have an account? <a href="login.html" id="txt-login-link">Log in here</a></p>
+    <p class="login-text" id="txt-have-account">
+      Already have an account? <a href="login.html" id="txt-login-link">Log in here</a>
+    </p>
   </div>
 </main>
 
@@ -155,7 +487,42 @@
 <script src="JS/security.js"></script>
 <script type="module" src="JS/firebase-config.js"></script>
 <script type="module" src="JS/signup.js"></script>
-<script>generateStars();</script>
-<script src="JS/bug-report.js"></script>
+<script>
+  if (typeof generateStars === 'function') generateStars();
+
+  function togglePass() {
+    const inp = document.getElementById('inp-pass');
+    const btn = document.getElementById('eye-btn');
+    const isHidden = inp.type === 'password';
+    inp.type = isHidden ? 'text' : 'password';
+    btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    btn.querySelector('svg').innerHTML = isHidden
+      ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`
+      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  }
+
+  // Sync aria-disabled on button
+  const _origSignup = window.doSignup;
+  window.addEventListener('load', () => {
+    const btn = document.getElementById('signup-btn');
+    const inputs = ['inp-name','inp-email','inp-pass','inp-pass2'];
+    inputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', () => {
+        if (btn) btn.setAttribute('aria-disabled', btn.disabled ? 'true' : 'false');
+      });
+    });
+
+    // Medium btn aria-pressed
+    document.getElementById('med-en')?.addEventListener('click', () => {
+      document.getElementById('med-en').setAttribute('aria-pressed','true');
+      document.getElementById('med-ur').setAttribute('aria-pressed','false');
+    });
+    document.getElementById('med-ur')?.addEventListener('click', () => {
+      document.getElementById('med-ur').setAttribute('aria-pressed','true');
+      document.getElementById('med-en').setAttribute('aria-pressed','false');
+    });
+  });
+</script>
 </body>
 </html>
