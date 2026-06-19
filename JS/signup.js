@@ -292,3 +292,17 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('med-en')   ?.addEventListener('click', () => setMedium('english'));
   document.getElementById('med-ur')   ?.addEventListener('click', () => setMedium('urdu'));
 });
+
+/* ─────────────────────────────────────────
+   Exports
+   REQUIRED because this file is loaded as
+   <script type="module">. Module-scoped functions
+   are NOT automatically global, so any function
+   referenced via inline onclick="..." in signup.html
+   must be explicitly attached to window here.
+───────────────────────────────────────── */
+window.doSignup   = doSignup;
+window.validate    = validate;
+window.togglePass  = togglePass;
+window.setMedium   = setMedium;
+window.checkStrength = checkStrength;

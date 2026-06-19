@@ -248,3 +248,15 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') doLogin();
   });
 });
+
+/* ─────────────────────────────────────────
+   Exports
+   REQUIRED because this file is loaded as
+   <script type="module">. Module-scoped functions
+   are NOT automatically global, so any function
+   referenced via inline onclick="..." in login.html
+   must be explicitly attached to window here.
+───────────────────────────────────────── */
+window.doLogin       = doLogin;
+window.validateLogin = validateLogin;
+window.togglePass    = togglePass;
