@@ -23,10 +23,10 @@ const DEFAULT_CHAPTER_COUNT = 5;
 /* ─────────────────────────────────────────
    State
 ───────────────────────────────────────── */
-let currentQuiz   = [];
-let currentQ      = 0;
-let userAnswers   = [];
-let quizMeta      = {};
+let currentQuiz = [];
+let currentQ    = 0;
+let userAnswers = [];
+let quizMeta    = {};
 
 /* ─────────────────────────────────────────
    Helpers
@@ -104,6 +104,9 @@ function initQuiz() {
     sel.appendChild(opt);
   });
 
+  // Remember class for the AI prompt (used in fetchQuestionsFromAI)
+  quizMeta.cls = user.cls;
+
   // Pre-fill from URL params (e.g. coming from reader.html)
   const params     = new URLSearchParams(window.location.search);
   const subFromURL = params.get('subject');
@@ -127,7 +130,7 @@ function initQuiz() {
 ───────────────────────────────────────── */
 function loadChapters() {
   const subject = document.getElementById('sel-subject')?.value;
-  const chSel   = document.getElementById('sel-chapter');
+  const chSel    = document.getElementById('sel-chapter');
   if (!chSel) return;
 
   chSel.innerHTML = '<option value="">— Pick a chapter —</option>';
@@ -195,23 +198,23 @@ function checkOldQuiz() {
   const subject = document.getElementById('sel-subject')?.value;
   const chapter = document.getElementById('sel-chapter')?.value;
   const level   = quizMeta.level;
-  const prompt  = document.getElementById('old-quiz-prompt');
+  const promptEl = document.getElementById('old-quiz-prompt');
 
   checkGenBtn();
-  if (!prompt) return;
+  if (!promptEl) return;
 
   if (!subject || !chapter || !level) {
-    prompt.style.display = 'none';
+    promptEl.style.display = 'none';
     return;
   }
 
   const old = findOldQuiz(subject, chapter, level);
   if (old) {
-    prompt.style.display = 'flex';
+    promptEl.style.display = 'flex';
     setText('old-quiz-meta',
       `${subject} Ch.${chapter} — ${capitalize(old.level)} — Score: ${old.score}/${old.total}`);
   } else {
-    prompt.style.display = 'none';
+    promptEl.style.display = 'none';
   }
 }
 
@@ -226,7 +229,7 @@ async function generateNewQuiz() {
 
   if (!subject || !chapter || !level) return;
 
-  quizMeta = { subject, chapter, level, total: parseInt(qcount, 10) };
+  quizMeta = { ...quizMeta, subject, chapter, level, total: parseInt(qcount, 10) };
 
   hideSection('quiz-setup');
   showFlex('quiz-loading');
@@ -251,26 +254,47 @@ async function generateNewQuiz() {
   }
 }
 
+/* ─────────────────────────────────────────
+   AI API call — Pakistani board-style MCQs
+   with per-option explanations (preserved exactly
+   as the prompt you wrote, including the
+   ✓ Correct: / ✗ Wrong: explanation style).
+───────────────────────────────────────── */
 async function fetchQuestionsFromAI(subject, chapter, level, count) {
   const levelDesc = {
-    low:    'very easy basic recall',
-    medium: 'medium difficulty application',
-    high:   'hard exam-level analytical',
+    low:    'very easy basic recall questions, multiple choice',
+    medium: 'medium difficulty application questions, multiple choice',
+    high:   'hard exam level analytical questions, multiple choice',
   };
 
-  const prompt = `Generate ${count} ${levelDesc[level] ?? 'medium difficulty'} multiple choice quiz questions for Pakistani students studying ${subject}, Chapter ${chapter}.
+  const prompt = `You are a Pakistani board exam question maker. Generate ${count} exam-style multiple choice questions for Class ${quizMeta.cls || '12'} students studying ${subject}, Chapter ${chapter}.
 
-Return ONLY a valid JSON array. No extra text, no markdown.
+Style rules:
+- Questions must follow Pakistani BISE board exam style
+- Use proper academic English
+- Mix of knowledge, understanding and application questions
+- Questions should be clear and unambiguous
+- Options should be plausible — not obviously wrong
+- Difficulty: ${levelDesc[level] ?? 'medium difficulty'}
 
-FORMAT:
+Return ONLY a JSON array. No extra text. No markdown. Format:
 [
   {
     "q": "Question text here?",
     "options": ["Option A", "Option B", "Option C", "Option D"],
-    "answer": 0
+    "answer": 0,
+    "explanations": [
+      "Why option A is correct or wrong — one clear sentence.",
+      "Why option B is correct or wrong — one clear sentence.",
+      "Why option C is correct or wrong — one clear sentence.",
+      "Why option D is correct or wrong — one clear sentence."
+    ]
   }
 ]
-"answer" is the zero-based index (0, 1, 2, or 3) of the correct option.`;
+"answer" is the index (0,1,2,3) of the correct option.
+"explanations" has exactly 4 items — one explanation for EACH option.
+For correct option start with "✓ Correct:" and for wrong options start with "✗ Wrong:".
+Keep each explanation to one sentence maximum.`;
 
   let response;
   try {
@@ -312,7 +336,7 @@ function loadOldQuiz() {
   const old = findOldQuiz(subject, chapter, level);
   if (!old || !old.questions) return;
 
-  quizMeta    = { subject, chapter, level, total: old.questions.length };
+  quizMeta    = { ...quizMeta, subject, chapter, level, total: old.questions.length };
   currentQuiz = old.questions;
   currentQ    = 0;
   userAnswers = new Array(old.questions.length).fill(null);
@@ -348,6 +372,10 @@ function renderQuestion() {
     `${quizMeta.subject} — Chapter ${quizMeta.chapter} — ${capitalize(quizMeta.level)}`);
   setText('question-text', q.q);
 
+  // Remove any leftover explanation blocks from the previous question
+  document.querySelectorAll('.option-explanation').forEach(e => e.remove());
+  document.getElementById('quiz-explanation')?.remove();
+
   const optList = document.getElementById('options-list');
   if (!optList) return;
   optList.innerHTML = '';
@@ -364,7 +392,7 @@ function renderQuestion() {
 
     if (answered) {
       btn.disabled = true;
-      if (i === q.answer)               btn.classList.add('correct');
+      if (i === q.answer)                   btn.classList.add('correct');
       else if (i === userAnswers[currentQ]) btn.classList.add('wrong');
     } else {
       btn.addEventListener('click', () => selectAnswer(i));
@@ -372,6 +400,12 @@ function renderQuestion() {
 
     optList.appendChild(btn);
   });
+
+  // If this question was already answered (e.g. navigating back),
+  // re-show the explanations under each option.
+  if (answered) {
+    renderExplanations(q);
+  }
 
   const prevBtn = document.getElementById('btn-prev');
   const nextBtn = document.getElementById('btn-next');
@@ -387,32 +421,33 @@ function renderQuestion() {
   }
 }
 
-function selectAnswer(index) {
-  if (userAnswers[currentQ] !== null) return;
-  userAnswers[currentQ] = index;
+/* ─────────────────────────────────────────
+   Per-option explanations
+   (your feature — shows a short note under
+   each option once the question is answered)
+───────────────────────────────────────── */
+function renderExplanations(q) {
+  if (!q.explanations || !Array.isArray(q.explanations)) return;
 
-  const q = currentQuiz[currentQ];
-  const btns = document.querySelectorAll('.option-btn');
+  const optList = document.getElementById('options-list');
+  if (!optList) return;
 
+  const btns = optList.querySelectorAll('.option-btn');
   btns.forEach((btn, i) => {
-    btn.classList.add('answered');
-    if (i === q.answer) btn.classList.add('correct');
-    else if (i === index) btn.classList.add('wrong');
+    const text = q.explanations[i];
+    if (!text) return;
 
-    // Show explanation right next to each option
-    if (q.explanations && q.explanations[i]) {
-      const expDiv = document.createElement('div');
-      expDiv.className = 'option-explanation ' +
-        (i === q.answer ? 'opt-exp-correct' : 'opt-exp-wrong');
-      expDiv.textContent = q.explanations[i];
-      btn.after(expDiv);
-    }
+    const expDiv = document.createElement('div');
+    expDiv.className = 'option-explanation ' +
+      (i === q.answer ? 'opt-exp-correct' : 'opt-exp-wrong');
+    expDiv.textContent = text; // textContent — safe even though it may contain ✓/✗ symbols
+    expDiv.setAttribute('role', 'note');
+    btn.after(expDiv);
   });
 }
 
-
 function selectAnswer(index) {
-  if (userAnswers[currentQ] !== null) return;
+  if (userAnswers[currentQ] !== null) return; // already answered
   userAnswers[currentQ] = index;
 
   const q    = currentQuiz[currentQ];
@@ -422,6 +457,8 @@ function selectAnswer(index) {
     if (i === q.answer)  btn.classList.add('correct');
     else if (i === index) btn.classList.add('wrong');
   });
+
+  renderExplanations(q);
 }
 
 function nextQ() {
@@ -469,8 +506,15 @@ function submitQuiz() {
   );
 
   renderBreakdown();
+  showRetryOptions();
 }
 
+/* ─────────────────────────────────────────
+   Results breakdown — uses the per-option
+   "explanations" array if present, otherwise
+   falls back to a single "explanation" field
+   if your AI prompt ever returns one of those instead.
+───────────────────────────────────────── */
 function renderBreakdown() {
   const container = document.getElementById('result-breakdown');
   if (!container) return;
@@ -483,6 +527,17 @@ function renderBreakdown() {
     const yourAns    = userAnswers[i] !== null ? q.options[userAnswers[i]] : 'Not answered';
     const correctAns = q.options[q.answer];
 
+    // Prefer the explanation tied to the chosen/correct option from the
+    // explanations[] array; fall back to a flat `explanation` string
+    // if that's what the AI response happened to include.
+    let noteText = '';
+    if (Array.isArray(q.explanations)) {
+      const idx = correct ? q.answer : (userAnswers[i] ?? q.answer);
+      noteText = q.explanations[idx] ?? '';
+    } else if (q.explanation) {
+      noteText = q.explanation;
+    }
+
     const item       = document.createElement('div');
     item.className   = `breakdown-item ${correct ? 'correct-item' : 'wrong-item'}`;
     item.innerHTML   = `
@@ -493,6 +548,7 @@ function renderBreakdown() {
           : `<div class="bi-ans wrong-ans">Your answer: ${escapeHTML(yourAns)}</div>
              <div class="bi-ans correct-ans">Correct: ${escapeHTML(correctAns)}</div>`
         }
+        ${noteText ? `<div class="bi-ans bi-explanation">💡 ${escapeHTML(noteText)}</div>` : ''}
       </div>`;
     frag.appendChild(item);
   });
@@ -544,9 +600,66 @@ async function saveQuizResult(score, total, percent) {
 }
 
 /* ─────────────────────────────────────────
-   Retry / new quiz
+   "What do you want to do?" retry prompt
+   (your feature — shown automatically once
+   the quiz is submitted, English + Urdu text)
 ───────────────────────────────────────── */
-function retryQuiz() {
+function showRetryOptions() {
+  // Avoid duplicating the block if submitQuiz somehow runs twice
+  document.getElementById('retry-options')?.remove();
+
+  const resultBtns = document.querySelector('.result-btns');
+  if (!resultBtns) return;
+
+  const div = document.createElement('div');
+  div.id = 'retry-options';
+  div.setAttribute('role', 'region');
+  div.setAttribute('aria-label', 'What do you want to do next');
+  div.style.cssText = `
+    background: rgba(124,108,240,0.08);
+    border: 1px solid rgba(124,108,240,0.2);
+    border-radius: 14px;
+    padding: 20px;
+    margin-top: 16px;
+    text-align: center;
+    width: 100%;
+  `;
+  div.innerHTML = `
+    <div style="font-size:15px;font-weight:700;color:var(--text-primary,#fff);margin-bottom:6px">
+      What do you want to do?
+    </div>
+    <div style="font-size:13px;color:var(--text-secondary,#9ca3af);margin-bottom:16px;direction:rtl">
+      آپ کیا کرنا چاہتے ہیں؟
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button type="button" id="retry-same-btn" style="
+        padding:10px 20px;border-radius:10px;
+        background:rgba(124,108,240,0.15);
+        border:1px solid rgba(124,108,240,0.3);
+        color:var(--accent-light,#a78bfa);font-size:13px;font-weight:700;
+        font-family:Nunito,sans-serif;cursor:pointer;
+      ">
+        🔄 Retry same quiz
+      </button>
+      <button type="button" id="retry-new-btn" style="
+        padding:10px 20px;border-radius:10px;
+        background:linear-gradient(135deg,#7c6cf0,#5b4dd4);
+        border:none;
+        color:#fff;font-size:13px;font-weight:700;
+        font-family:Nunito,sans-serif;cursor:pointer;
+      ">
+        ✨ Generate new quiz
+      </button>
+    </div>`;
+
+  resultBtns.after(div);
+
+  document.getElementById('retry-same-btn')?.addEventListener('click', retrySameQuiz);
+  document.getElementById('retry-new-btn') ?.addEventListener('click', newQuiz);
+}
+
+function retrySameQuiz() {
+  document.getElementById('retry-options')?.remove();
   currentQ    = 0;
   userAnswers = new Array(currentQuiz.length).fill(null);
   hideSection('quiz-results');
@@ -555,12 +668,13 @@ function retryQuiz() {
 }
 
 function newQuiz() {
+  document.getElementById('retry-options')?.remove();
   hideSection('quiz-results');
   showSection('quiz-setup');
   currentQuiz  = [];
   currentQ     = 0;
   userAnswers  = [];
-  quizMeta     = {};
+  quizMeta     = { cls: quizMeta.cls }; // keep class, clear the rest
 
   document.querySelectorAll('.level-card').forEach(c => {
     c.classList.remove('selected');
@@ -575,15 +689,20 @@ function newQuiz() {
 window.addEventListener('DOMContentLoaded', initQuiz);
 
 /* ─────────────────────────────────────────
-   Exports (for inline onclick handlers
-   still present in the HTML)
+   Exports
+   REQUIRED because this file is loaded as
+   <script type="module">. Module-scoped functions
+   are NOT automatically global, so every function
+   referenced via inline onclick="..." in quiz.html
+   must be explicitly attached to window here.
 ───────────────────────────────────────── */
 window.initQuiz        = initQuiz;
 window.loadChapters    = loadChapters;
 window.selectLevel     = selectLevel;
 window.generateNewQuiz = generateNewQuiz;
 window.loadOldQuiz     = loadOldQuiz;
-window.retryQuiz       = retryQuiz;
+window.retrySameQuiz   = retrySameQuiz;
 window.newQuiz         = newQuiz;
 window.prevQ           = prevQ;
 window.nextQ           = nextQ;
+window.selectAnswer    = selectAnswer;

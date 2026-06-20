@@ -1458,6 +1458,38 @@ input[type="range"] {
   border-color: rgba(248,113,113,0.5);
 }
 
+/* ===== MCQ OPTION EXPLANATIONS ===== */
+.option-explanation {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 10px 14px;
+  margin: -4px 0 8px 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  animation: fadeInUp 0.25s ease;
+}
+
+.opt-exp-correct {
+  background: rgba(52,211,153,0.08);
+  border-color: rgba(52,211,153,0.2);
+  color: var(--teal);
+}
+
+.opt-exp-wrong {
+  background: rgba(248,113,113,0.06);
+  border-color: rgba(248,113,113,0.15);
+  color: var(--text-secondary);
+}
+
+/* Explanation note inside the results breakdown */
+.bi-explanation {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
 /* ===== UTILITIES ===== */
 .urdu { direction: rtl; }
 
