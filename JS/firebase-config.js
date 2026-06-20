@@ -7,6 +7,7 @@ import {
   signOut,
   onAuthStateChanged,
   sendEmailVerification,
+  sendPasswordResetEmail,
 } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js';
 import {
   getDatabase,
@@ -129,6 +130,19 @@ async function firebaseLogin(email, password) {
 }
 
 /* ─────────────────────────────────────────
+   PASSWORD RESET
+   Sends Firebase's built-in "reset your password" email.
+   Firebase intentionally does NOT reveal whether the email
+   exists in the system (security best practice — prevents
+   attackers from using this to find out which emails are
+   registered). The UI should always show the same generic
+   success message regardless of whether the account exists.
+───────────────────────────────────────── */
+async function firebaseSendPasswordReset(email) {
+  await sendPasswordResetEmail(auth, email);
+}
+
+/* ─────────────────────────────────────────
    LOGOUT
 ───────────────────────────────────────── */
 async function firebaseLogout() {
@@ -196,5 +210,6 @@ export {
   firebaseSignup, firebaseLogin, firebaseLogout,
   firebaseGetUser, firebaseSaveQuiz,
   firebaseUpdateProfile, firebaseSaveChapter,
+  firebaseSendPasswordReset,
   onAuthReady, sendEmailVerification,
 };
