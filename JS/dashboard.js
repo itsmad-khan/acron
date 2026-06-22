@@ -117,6 +117,31 @@ function requireAuth() {
 }
 
 /* ─────────────────────────────────────────
+   Resilient user fetch
+   Retries a couple of times with a short delay before
+   giving up — protects against the transient auth-token
+   timing issue described in initDashboard() below,
+   especially common on mobile/slower connections.
+───────────────────────────────────────── */
+async function getUserWithRetry(uid, attempts = 3) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const user = await firebaseGetUser(uid);
+      if (user) return user;
+      // firebaseGetUser resolved but found nothing — could still be a
+      // timing issue on the first attempt, so retry before trusting it.
+    } catch (err) {
+      console.warn(`[Dashboard] getUser attempt ${i + 1} failed:`, err.code || err.message);
+    }
+
+    if (i < attempts - 1) {
+      await new Promise(r => setTimeout(r, 500 * (i + 1)));
+    }
+  }
+  return null;
+}
+
+/* ─────────────────────────────────────────
    Dashboard init
 ───────────────────────────────────────── */
 async function initDashboard() {
@@ -124,8 +149,19 @@ async function initDashboard() {
   if (!uid) return;
 
   try {
-    const user = await firebaseGetUser(uid);
+    // Fixes a race condition seen mainly on mobile/slower connections:
+    // right after login, Firebase's auth token can briefly not be fully
+    // ready for a database READ, the same way it wasn't ready for the
+    // signup WRITE we fixed earlier. Without a retry, a single transient
+    // failure here looks identical to "this account doesn't exist" and
+    // incorrectly bounces a real, successfully-logged-in user back to
+    // the login page.
+    const user = await getUserWithRetry(uid);
+
     if (!user) {
+      // Only reached after retries are exhausted — at this point it's
+      // genuinely likely the account doesn't exist in the database.
+      console.error('[Dashboard] No user data found after retries for uid:', uid);
       window.location.href = 'login.html';
       return;
     }

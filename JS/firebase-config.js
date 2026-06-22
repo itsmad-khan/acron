@@ -168,8 +168,17 @@ async function firebaseLogout() {
 
 /* ─────────────────────────────────────────
    GET USER DATA
+   Forces a fresh ID token before reading, same safeguard
+   used in firebaseSignup() — fixes the case where this is
+   called right after login/signup and the auth token isn't
+   fully propagated yet for database security rules
+   (especially noticeable on slower mobile connections).
 ───────────────────────────────────────── */
 async function firebaseGetUser(uid) {
+  const user = auth.currentUser;
+  if (user) {
+    await ensureFreshToken(user);
+  }
   const snapshot = await get(ref(db, `users/${uid}`));
   return snapshot.exists() ? snapshot.val() : null;
 }
