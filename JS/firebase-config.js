@@ -92,13 +92,28 @@ async function writeWithRetry(path, data, attempts = 3) {
 /* ─────────────────────────────────────────
    SIGNUP
 ───────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Email action redirect settings
+   Tells Firebase where to send the user AFTER they click
+   the verification link in their email. Without this,
+   Firebase shows its own generic unbranded confirmation
+   page instead of returning them to Acron.
+───────────────────────────────────────── */
+const VERIFY_REDIRECT_SETTINGS = {
+  // IMPORTANT: this must be a URL on a domain listed under
+  // Firebase Console → Authentication → Settings → Authorized domains
+  url: `${window.location.origin}/verify-success.html`,
+};
+
 async function firebaseSignup(name, email, password, board, cls, medium) {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
 
   // Send verification email — independent of database write,
   // so it still goes out even if the DB write below needs retries.
-  await sendEmailVerification(user);
+  // actionCodeSettings makes the link redirect back to our own
+  // branded success page instead of Firebase's generic page.
+  await sendEmailVerification(user, VERIFY_REDIRECT_SETTINGS);
 
   // Make sure auth state + ID token are fully settled before
   // writing to the database (fixes PERMISSION_DENIED on signup).
@@ -212,4 +227,5 @@ export {
   firebaseUpdateProfile, firebaseSaveChapter,
   firebaseSendPasswordReset,
   onAuthReady, sendEmailVerification,
+  VERIFY_REDIRECT_SETTINGS,
 };

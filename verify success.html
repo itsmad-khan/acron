@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>acron — Email Verified</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="CSS/style.css"/>
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-8YTGSYM38H');
+</script>
+
+<style>
+  :root {
+    --bg:           #0d0f1a;
+    --bg-2:         #131629;
+    --surface:      #1a1e32;
+    --surface-2:    #1f2438;
+    --border:       rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.13);
+    --text-primary:   #f0f2ff;
+    --text-secondary: #8b92b8;
+    --text-muted:     #525878;
+    --accent:       #7c6cf0;
+    --accent-light: #9d90f5;
+    --teal:         #34d399;
+    --rose:         #f87171;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+    --transition: 200ms cubic-bezier(0.4,0,0.2,1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+
+  /* ── Navbar ── */
+  .navbar {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 64px;
+    background: rgba(13,15,26,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--accent), #5b4dd4);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    color: #fff; box-shadow: 0 4px 12px rgba(124,108,240,0.4);
+  }
+  .logo-name { display: block; font-size: 17px; font-weight: 800; color: var(--text-primary); line-height: 1.1; letter-spacing: -0.3px; }
+  .logo-urdu { display: block; font-size: 11px; color: var(--text-secondary); line-height: 1; }
+
+  /* ── Layout ── */
+  .verify-main {
+    position: relative; z-index: 1;
+    min-height: calc(100vh - 64px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 16px;
+  }
+
+  .verify-card {
+    width: 100%; max-width: 440px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 44px 36px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── States ── */
+  .state-icon {
+    width: 76px; height: 76px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .state-icon.success {
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.25);
+    color: var(--teal);
+  }
+
+  .state-icon.error {
+    background: rgba(248,113,113,0.12);
+    border: 1px solid rgba(248,113,113,0.25);
+    color: var(--rose);
+  }
+
+  .state-icon.loading {
+    background: rgba(124,108,240,0.12);
+    border: 1px solid rgba(124,108,240,0.25);
+  }
+
+  .spinner {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 3px solid rgba(124,108,240,0.25);
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .state-title {
+    font-size: 21px; font-weight: 800;
+    color: var(--text-primary); letter-spacing: -0.3px;
+  }
+
+  .state-sub {
+    font-size: 14px; color: var(--text-secondary);
+    font-weight: 500; line-height: 1.55;
+    max-width: 320px;
+  }
+
+  /* ── CTA button ── */
+  .cta-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px 24px; margin-top: 20px;
+    border-radius: var(--radius-md); border: none;
+    background: linear-gradient(135deg, var(--accent), #5b4dd4);
+    color: #fff; font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 800; cursor: pointer;
+    text-decoration: none;
+    transition: opacity var(--transition), transform var(--transition), box-shadow var(--transition);
+    box-shadow: 0 4px 16px rgba(124,108,240,0.4);
+    min-height: 50px;
+  }
+  .cta-btn:hover {
+    opacity: 0.92; transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(124,108,240,0.5);
+  }
+  .cta-btn:active { transform: translateY(0); }
+
+  .secondary-link {
+    margin-top: 14px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text-muted); text-decoration: none;
+    transition: color var(--transition);
+  }
+  .secondary-link:hover { color: var(--accent-light); }
+
+  /* ── Light mode ── */
+  body.light-mode {
+    --bg: #f4f6fb; --bg-2: #eef0f7; --surface: #ffffff; --surface-2: #f0f2fa;
+    --border: rgba(0,0,0,0.08); --border-hover: rgba(0,0,0,0.14);
+    --text-primary: #1a1d2e; --text-secondary: #5a6080; --text-muted: #9ba3c0;
+  }
+
+  @media (max-width: 480px) {
+    .verify-card { padding: 36px 24px; border-radius: 18px; }
+    .navbar { padding: 0 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="logo" aria-label="Acron home">
+    <div class="logo-icon" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <div>
+      <span class="logo-name">Acron</span>
+      <span class="logo-urdu">علم کی راہ</span>
+    </div>
+  </a>
+</nav>
+
+<main class="verify-main" id="main-content">
+  <div class="verify-card" role="region" aria-label="Email verification status">
+
+    <!-- Default: checking state (shown briefly while JS runs) -->
+    <div id="state-checking">
+      <div class="state-icon loading" aria-hidden="true">
+        <div class="spinner"></div>
+      </div>
+      <h1 class="state-title">Checking your link…</h1>
+      <p class="state-sub">Please wait a moment.</p>
+    </div>
+
+    <!-- Success state -->
+    <div id="state-success" style="display:none">
+      <div class="state-icon success" aria-hidden="true">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h1 class="state-title">Email verified! 🎉</h1>
+      <p class="state-sub" id="success-sub">
+        Your email has been confirmed. You're all set to start studying.
+      </p>
+      <a href="dashboard.html" class="cta-btn" id="cta-btn">
+        <span id="cta-text">Go to Dashboard</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Error state (expired/invalid link) -->
+    <div id="state-error" style="display:none">
+      <div class="state-icon error" aria-hidden="true">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      <h1 class="state-title">Link expired or already used</h1>
+      <p class="state-sub" id="error-sub">
+        This verification link is no longer valid. You can request a new one by logging in.
+      </p>
+      <a href="login.html" class="cta-btn">
+        <span>Go to Login</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+
+  </div>
+</main>
+
+<script src="JS/config.js"></script>
+<script src="JS/lang.js"></script>
+<script type="module" src="JS/verify-success.js"></script>
+<script>
+  if (typeof generateStars === 'function') generateStars();
+</script>
+<script src="JS/bug-report.js"></script>
+</body>
+</html>

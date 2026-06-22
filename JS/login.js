@@ -1,4 +1,4 @@
-import { firebaseLogin, sendEmailVerification } from './firebase-config.js';
+import { firebaseLogin, sendEmailVerification, VERIFY_REDIRECT_SETTINGS } from './firebase-config.js';
 
 /* ─────────────────────────────────────────
    Constants
@@ -166,7 +166,7 @@ function showVerificationError(user) {
     btn.disabled = true;
     btn.textContent = 'Sending…';
     try {
-      await sendEmailVerification(user);
+      await sendEmailVerification(user, VERIFY_REDIRECT_SETTINGS);
       btn.textContent = '✓ Email sent! Check your inbox.';
       btn.style.color = 'var(--teal)';
     } catch {
