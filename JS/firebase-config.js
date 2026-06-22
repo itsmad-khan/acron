@@ -109,18 +109,14 @@ async function firebaseSignup(name, email, password, board, cls, medium) {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
 
-  // Send verification email — independent of database write,
-  // so it still goes out even if the DB write below needs retries.
-  // actionCodeSettings makes the link redirect back to our own
-  // branded success page instead of Firebase's generic page.
-  await sendEmailVerification(user, VERIFY_REDIRECT_SETTINGS);
-
   // Make sure auth state + ID token are fully settled before
   // writing to the database (fixes PERMISSION_DENIED on signup).
   await waitForAuthUser(user.uid);
   await ensureFreshToken(user);
 
-  // Save user profile — with retry safeguard
+  // Save user profile FIRST — this is the critical data. If this
+  // throws, the caller's catch block can react meaningfully (though
+  // the Auth account will still exist as an orphan; see note below).
   await writeWithRetry(`users/${user.uid}`, {
     name,
     email,
@@ -132,6 +128,23 @@ async function firebaseSignup(name, email, password, board, cls, medium) {
     quizHistory: [],
     chaptersRead: [],
   });
+
+  // Send verification email AFTER the database write succeeds, and
+  // treat its failure as non-fatal. sendEmailVerification() hits a
+  // RATE-LIMITED Firebase endpoint (auth/too-many-requests during
+  // repeated testing) — if this were awaited before the database
+  // write (as it was previously) or allowed to throw and abort
+  // signup, a rate-limit hit would leave a real Auth account with
+  // NO database profile (an orphan), since the account was already
+  // created on the line above by createUserWithEmailAndPassword.
+  // The account is fully usable either way; worst case the student
+  // just doesn't get the verification email on the very first try
+  // and can use "Resend verification email" from the login page.
+  try {
+    await sendEmailVerification(user, VERIFY_REDIRECT_SETTINGS);
+  } catch (err) {
+    console.warn('[Signup] Verification email failed to send (non-fatal):', err.code || err.message);
+  }
 
   return user;
 }
