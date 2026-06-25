@@ -51,34 +51,24 @@ function configureContinueButton() {
    Main
    IMPORTANT: by the time the browser reaches THIS page, Firebase's
    own hosted action handler (acron-22009.firebaseapp.com) has
-   ALREADY consumed the oobCode and verified the email — that's
-   what happens on the page the person sees right after clicking
-   the link in their inbox, before being redirected here via
-   continueUrl. Re-running checkActionCode()/applyActionCode() on
-   an already-consumed code here would always fail with
-   auth/invalid-action-code, since a verification code can only be
-   used once.
+   ALREADY consumed the oobCode and verified the email on its own
+   page — that's what the person sees right after clicking the link
+   in their inbox, before being redirected here via continueUrl.
 
-   So this page's only job is to: (1) confirm we arrived here as
-   part of a genuine verification flow, and (2) show success +
-   pick the right "continue" destination based on session state.
+   CRITICAL: Firebase does NOT forward 'mode' or 'oobCode' onto the
+   continueUrl — it delivers a clean URL with no query parameters at
+   all. So there is no reliable URL parameter here to confirm "this
+   came from a real verification email" versus someone just typing
+   the URL directly. We accept that trade-off: this page simply
+   reflects whatever the current Firebase Auth session state is.
+   If someone opens this URL directly with no real session, they'll
+   just see "Log in to continue" — there's no harmful side effect,
+   since no sensitive action happens on this page itself.
 ───────────────────────────────────────── */
 async function handleVerification() {
-  const params = new URLSearchParams(window.location.search);
-  const mode   = params.get('mode'); // Firebase still includes this on the continueUrl
-
-  // A stray visit with no 'mode' param at all means someone opened
-  // this URL directly, not via the email verification flow.
-  if (mode !== 'verifyEmail') {
-    showState('state-error');
-    setText('error-sub',
-      'This page is only meant to be opened from the verification link in your email.');
-    return;
-  }
-
-  // Give onAuthStateChanged a moment to report the current session —
-  // by this point Firebase has already verified the email on its own
-  // hosted page, so we simply reflect that success here.
+  // Give Firebase a brief moment to restore the session from storage
+  // before we check auth.currentUser, since this can be momentarily
+  // null on first page load even when a session genuinely exists.
   try {
     const user = auth.currentUser;
     if (user) {
