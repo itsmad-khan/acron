@@ -19,10 +19,13 @@ let epubChapterRefs = [];     // ordered list of {href, label} for EPUB spine
 const PDF_JS_VERSION  = '3.11.174';
 const PDF_JS_CDN      = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_JS_VERSION}`;
 const EPUB_JS_VERSION = '0.2.13'; // futurepress/epub.js — also requires JSZip
-const JSZIP_VERSION   = '3.1.5';  // MUST stay pinned to this version — epub.js 0.2.x
-                                   // calls JSZip's pre-3.0-style constructor API,
-                                   // which newer JSZip releases (3.6+) removed entirely.
-                                   // See: https://github.com/futurepress/epub.js (Getting Started)
+const JSZIP_VERSION   = '2.6.1';  // MUST stay on the 2.x line — epub.js 0.2.x calls
+                                   // JSZip's old synchronous `new JSZip(data)` constructor,
+                                   // which was REMOVED starting at JSZip 3.0.0 (this also
+                                   // affects every 3.x release, including 3.1.5 — confirmed
+                                   // directly: 2.6.1 is on cdnjs and contains the old
+                                   // constructor; do not "upgrade" this without also
+                                   // rewriting how loadEPUB()/extractEPUBText() call epub.js.
 const MAX_TEXT_CHARS  = 4000;
 const MAX_FILE_BYTES  = 15 * 1024 * 1024; // 15 MB — slightly higher than before since EPUBs can run larger
 
