@@ -19,7 +19,10 @@ let epubChapterRefs = [];     // ordered list of {href, label} for EPUB spine
 const PDF_JS_VERSION  = '3.11.174';
 const PDF_JS_CDN      = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_JS_VERSION}`;
 const EPUB_JS_VERSION = '0.2.13'; // futurepress/epub.js — also requires JSZip
-const JSZIP_VERSION   = '3.10.1';
+const JSZIP_VERSION   = '3.1.5';  // MUST stay pinned to this version — epub.js 0.2.x
+                                   // calls JSZip's pre-3.0-style constructor API,
+                                   // which newer JSZip releases (3.6+) removed entirely.
+                                   // See: https://github.com/futurepress/epub.js (Getting Started)
 const MAX_TEXT_CHARS  = 4000;
 const MAX_FILE_BYTES  = 15 * 1024 * 1024; // 15 MB — slightly higher than before since EPUBs can run larger
 
@@ -84,7 +87,11 @@ async function ensurePDFJS() {
 
 async function ensureEPUBJS() {
   if (window.ePub) return;
-  // epub.js depends on JSZip for unzipping the .epub archive
+  // epub.js depends on JSZip for unzipping the .epub archive.
+  // IMPORTANT: if you ever add another feature to this page that
+  // also needs JSZip, make sure it uses 3.1.5 too (or load epub.js
+  // first) — loading a newer JSZip here would break EPUB uploads
+  // again with the same "constructor removed" error.
   if (!window.JSZip) {
     await loadScript(`https://cdnjs.cloudflare.com/ajax/libs/jszip/${JSZIP_VERSION}/jszip.min.js`);
   }
