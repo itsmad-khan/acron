@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="google-adsense-account" content="pub-8085542523004870">
-<title>Acron — PDF Quiz</title>
+<title>Acron — Document Quiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="CSS/style.css"/>
@@ -467,47 +466,47 @@
   <div id="pdf-setup">
     <div class="quiz-setup-card">
 
-      <h1 class="quiz-setup-title">📄 PDF Quiz</h1>
-      <p class="quiz-setup-sub">Upload any PDF and AI will generate a quiz from it</p>
-      <p class="setup-urdu">کوئی بھی پی ڈی ایف اپلوڈ کریں — اے آئی کوئز بنائے گا</p>
+      <h1 class="quiz-setup-title">📚 Document Quiz</h1>
+      <p class="quiz-setup-sub">Upload a PDF or EPUB and AI will generate a quiz from it</p>
+      <p class="setup-urdu">پی ڈی ایف یا ای پب اپلوڈ کریں — اے آئی کوئز بنائے گا</p>
 
       <!-- Upload -->
       <div class="form-group">
-        <label class="form-label" for="pdf-input">Upload your PDF</label>
+        <label class="form-label" for="pdf-input">Upload your PDF or EPUB</label>
         <div class="pdf-upload-area" id="upload-area"
              onclick="document.getElementById('pdf-input').click()"
-             role="button" tabindex="0" aria-label="Click to upload PDF"
+             role="button" tabindex="0" aria-label="Click to upload PDF or EPUB"
              onkeydown="if(event.key==='Enter'||event.key===' ')document.getElementById('pdf-input').click()">
           <svg class="upload-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="17 8 12 3 7 8"/>
             <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
-          <div class="upload-main-text" id="upload-text">Click to upload PDF</div>
-          <div class="upload-sub-text">Maximum size: 10 MB</div>
+          <div class="upload-main-text" id="upload-text">Click to upload PDF or EPUB</div>
+          <div class="upload-sub-text">PDF or EPUB · Maximum size: 15 MB</div>
         </div>
-        <input type="file" id="pdf-input" accept=".pdf" style="display:none"
-               onchange="handlePDFUpload(this)" aria-label="PDF file input"/>
+        <input type="file" id="pdf-input" accept=".pdf,.epub,application/pdf,application/epub+zip" style="display:none"
+               onchange="handlePDFUpload(this)" aria-label="PDF or EPUB file input"/>
       </div>
 
-      <!-- Page range -->
+      <!-- Page / chapter range — label and inputs adapt based on file type -->
       <div class="form-group" id="page-range-group" style="display:none">
-        <label class="form-label">Page range</label>
+        <label class="form-label" id="range-group-label">Page range</label>
         <div class="page-range-row">
           <div>
-            <span class="range-label">From page</span>
+            <span class="range-label" id="range-from-label">From page</span>
             <input type="number" id="page-from" class="form-input"
-                   value="1" min="1" aria-label="Start page"/>
+                   value="1" min="1" aria-label="Start page or chapter"/>
           </div>
           <div class="page-range-sep">—</div>
           <div>
-            <span class="range-label">To page</span>
+            <span class="range-label" id="range-to-label">To page</span>
             <input type="number" id="page-to" class="form-input"
-                   value="10" min="1" aria-label="End page"/>
+                   value="10" min="1" aria-label="End page or chapter"/>
           </div>
         </div>
         <p class="total-pages-note">
-          Total pages in your PDF: <span id="total-pages">—</span>
+          <span id="total-pages-label">Total pages in your PDF:</span> <span id="total-pages">—</span>
         </p>
       </div>
 
@@ -643,29 +642,12 @@
 
 </main>
 
+<script src="JS/browser-check.js"></script>
 <script src="JS/config.js"></script>
 <script src="JS/lang.js"></script>
 <script src="JS/pdfquiz.js"></script>
 <script>
   if (typeof generateStars === 'function') generateStars();
-
-  // Show file name pill after upload
-  const _origUpload = window.handlePDFUpload;
-  window.handlePDFUpload = function(input) {
-    if (_origUpload) _origUpload(input);
-    const area = document.getElementById('upload-area');
-    const text = document.getElementById('upload-text');
-    if (input.files && input.files[0]) {
-      area.classList.add('has-file');
-      text.innerHTML = `<span class="file-pill">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-        </svg>
-        ${input.files[0].name}
-      </span>`;
-    }
-  };
 </script>
 <script src="JS/bug-report.js"></script>
 </body>

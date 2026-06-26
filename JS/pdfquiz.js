@@ -1,21 +1,27 @@
 /* ============================================================
-   pdfquiz.js — PDF upload, text extraction, AI quiz generation
-   Includes per-option explanations and the retry-options prompt.
+   pdfquiz.js — Document upload (PDF or EPUB), text extraction,
+   AI quiz generation. Includes per-option explanations and the
+   retry-options prompt.
    ============================================================ */
 
 /* ─────────────────────────────────────────
    State
 ───────────────────────────────────────── */
-let pdfText       = '';
-let pdfQuiz       = [];
-let pdfCurrentQ   = 0;
-let pdfAnswers    = [];
-let pdfLevel      = '';
-let pdfTotalPages = 0;
+let docText         = '';
+let docType         = null;   // 'pdf' | 'epub'
+let pdfQuiz         = [];
+let pdfCurrentQ     = 0;
+let pdfAnswers      = [];
+let pdfLevel        = '';
+let docTotalUnits   = 0;      // total pages (PDF) or chapters (EPUB)
+let epubChapterRefs = [];     // ordered list of {href, label} for EPUB spine
 
-const PDF_JS_VERSION = '3.11.174';
-const PDF_JS_CDN     = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_JS_VERSION}`;
-const MAX_TEXT_CHARS = 4000;
+const PDF_JS_VERSION  = '3.11.174';
+const PDF_JS_CDN      = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_JS_VERSION}`;
+const EPUB_JS_VERSION = '0.2.13'; // futurepress/epub.js — also requires JSZip
+const JSZIP_VERSION   = '3.10.1';
+const MAX_TEXT_CHARS  = 4000;
+const MAX_FILE_BYTES  = 15 * 1024 * 1024; // 15 MB — slightly higher than before since EPUBs can run larger
 
 /* ─────────────────────────────────────────
    Helpers — show/hide sections
@@ -55,7 +61,8 @@ function capitalize(str) {
 }
 
 /* ─────────────────────────────────────────
-   Lazy-load PDF.js
+   Lazy-load external scripts (shared helper
+   for pdf.js, epub.js, and jszip)
 ───────────────────────────────────────── */
 function loadScript(src) {
   return new Promise((resolve, reject) => {
@@ -75,6 +82,25 @@ async function ensurePDFJS() {
     `${PDF_JS_CDN}/pdf.worker.min.js`;
 }
 
+async function ensureEPUBJS() {
+  if (window.ePub) return;
+  // epub.js depends on JSZip for unzipping the .epub archive
+  if (!window.JSZip) {
+    await loadScript(`https://cdnjs.cloudflare.com/ajax/libs/jszip/${JSZIP_VERSION}/jszip.min.js`);
+  }
+  await loadScript(`https://cdnjs.cloudflare.com/ajax/libs/epub.js/${EPUB_JS_VERSION}/epub.min.js`);
+}
+
+/* ─────────────────────────────────────────
+   File type detection
+───────────────────────────────────────── */
+function detectDocType(file) {
+  const name = (file.name || '').toLowerCase();
+  if (file.type === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
+  if (file.type === 'application/epub+zip' || name.endsWith('.epub')) return 'epub';
+  return null;
+}
+
 /* ─────────────────────────────────────────
    Step 1 — Handle file upload
 ───────────────────────────────────────── */
@@ -82,21 +108,24 @@ function handlePDFUpload(input) {
   const file = input.files?.[0];
   if (!file) return;
 
-  if (file.type !== 'application/pdf') {
-    showUploadError('Please upload a PDF file.');
+  const type = detectDocType(file);
+  if (!type) {
+    showUploadError('Please upload a PDF or EPUB file.');
     return;
   }
 
-  if (file.size > 10 * 1024 * 1024) {
-    showUploadError('File is too large. Maximum size is 10 MB.');
+  if (file.size > MAX_FILE_BYTES) {
+    showUploadError('File is too large. Maximum size is 15 MB.');
     return;
   }
+
+  docType = type;
 
   const area = document.getElementById('upload-area');
   const text = document.getElementById('upload-text');
   if (area) {
     area.classList.add('has-file');
-    area.style.borderColor = ''; // let the .has-file class control color
+    area.style.borderColor = '';
   }
   if (text) {
     text.innerHTML = `
@@ -115,9 +144,15 @@ function handlePDFUpload(input) {
   }
 
   const reader = new FileReader();
-  reader.onload  = e => loadPDF(new Uint8Array(e.target.result));
   reader.onerror = () => showUploadError('Could not read file. Please try again.');
-  reader.readAsArrayBuffer(file);
+
+  if (type === 'pdf') {
+    reader.onload = e => loadPDF(new Uint8Array(e.target.result));
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.onload = e => loadEPUB(e.target.result);
+    reader.readAsArrayBuffer(file);
+  }
 }
 
 function showUploadError(msg) {
@@ -127,8 +162,19 @@ function showUploadError(msg) {
   if (text) text.textContent = msg;
   setTimeout(() => {
     if (area) area.style.borderColor = '';
-    if (text) text.textContent = 'Click to upload PDF';
-  }, 3000);
+    if (text) text.textContent = 'Click to upload PDF or EPUB';
+  }, 3500);
+}
+
+/* ─────────────────────────────────────────
+   Range-UI label helpers
+───────────────────────────────────────── */
+function updateRangeLabels() {
+  const isEpub = docType === 'epub';
+  setText('range-group-label', isEpub ? 'Chapter range' : 'Page range');
+  setText('range-from-label',  isEpub ? 'From chapter'  : 'From page');
+  setText('range-to-label',    isEpub ? 'To chapter'    : 'To page');
+  setText('total-pages-label', isEpub ? 'Total chapters in your EPUB:' : 'Total pages in your PDF:');
 }
 
 /* ─────────────────────────────────────────
@@ -138,13 +184,15 @@ async function loadPDF(typedArray) {
   try {
     await ensurePDFJS();
     const pdf     = await window.pdfjsLib.getDocument(typedArray).promise;
-    pdfTotalPages = pdf.numPages;
+    docTotalUnits = pdf.numPages;
+
+    updateRangeLabels();
 
     const pageFrom = document.getElementById('page-from');
     const pageTo   = document.getElementById('page-to');
-    if (pageFrom) pageFrom.max = pdfTotalPages;
-    if (pageTo)   { pageTo.value = Math.min(10, pdfTotalPages); pageTo.max = pdfTotalPages; }
-    setText('total-pages', pdfTotalPages);
+    if (pageFrom) pageFrom.max = docTotalUnits;
+    if (pageTo)   { pageTo.value = Math.min(10, docTotalUnits); pageTo.max = docTotalUnits; }
+    setText('total-pages', docTotalUnits);
 
     showSection('page-range-group');
     showSection('level-group');
@@ -154,8 +202,50 @@ async function loadPDF(typedArray) {
     checkPDFGenBtn();
 
   } catch (err) {
-    console.error('[PDFQuiz] loadPDF:', err);
+    console.error('[DocQuiz] loadPDF:', err);
     showUploadError('Could not read PDF. Is it a valid, non-scanned PDF?');
+  }
+}
+
+/* ─────────────────────────────────────────
+   Step 1 — Load EPUB metadata
+───────────────────────────────────────── */
+async function loadEPUB(arrayBuffer) {
+  try {
+    await ensureEPUBJS();
+
+    const book = window.ePub(arrayBuffer);
+    await book.ready;
+
+    const spine = book.spine?.spineItems ?? book.spine?.items ?? [];
+    if (!spine.length) {
+      throw new Error('No readable chapters found in this EPUB.');
+    }
+
+    epubChapterRefs = spine.map((item, i) => ({
+      href:  item.href,
+      label: `Chapter ${i + 1}`,
+    }));
+    docTotalUnits = epubChapterRefs.length;
+
+    updateRangeLabels();
+
+    const pageFrom = document.getElementById('page-from');
+    const pageTo   = document.getElementById('page-to');
+    if (pageFrom) pageFrom.max = docTotalUnits;
+    if (pageTo)   { pageTo.value = Math.min(10, docTotalUnits); pageTo.max = docTotalUnits; }
+    setText('total-pages', docTotalUnits);
+
+    showSection('page-range-group');
+    showSection('level-group');
+    showSection('qcount-group');
+
+    window.currentEPUB = book;
+    checkPDFGenBtn();
+
+  } catch (err) {
+    console.error('[DocQuiz] loadEPUB:', err);
+    showUploadError('Could not read EPUB. Is it a valid, unprotected EPUB file?');
   }
 }
 
@@ -174,28 +264,30 @@ function selectPDFLevel(el, level) {
 }
 
 function checkPDFGenBtn() {
-  const btn   = document.getElementById('pdf-gen-btn');
-  const ready = !!(pdfLevel && window.currentPDF);
+  const btn    = document.getElementById('pdf-gen-btn');
+  const hasDoc = !!(window.currentPDF || window.currentEPUB);
+  const ready  = !!(pdfLevel && hasDoc);
   if (!btn) return;
   btn.toggleAttribute('disabled', !ready);
   btn.setAttribute('aria-disabled', ready ? 'false' : 'true');
 }
 
 /* ─────────────────────────────────────────
-   Step 1 — Validate page range
+   Step 1 — Validate page/chapter range
 ───────────────────────────────────────── */
 function validatePageRange() {
   const from = parseInt(document.getElementById('page-from')?.value ?? '1');
   const to   = parseInt(document.getElementById('page-to')?.value   ?? '1');
+  const unit = docType === 'epub' ? 'chapter' : 'page';
 
   if (isNaN(from) || isNaN(to) || from < 1) {
-    return { valid: false, msg: 'Invalid page numbers.' };
+    return { valid: false, msg: `Invalid ${unit} numbers.` };
   }
   if (from > to) {
-    return { valid: false, msg: '"From page" cannot be greater than "To page".' };
+    return { valid: false, msg: `"From ${unit}" cannot be greater than "To ${unit}".` };
   }
-  if (to > pdfTotalPages) {
-    return { valid: false, msg: `"To page" cannot exceed total pages (${pdfTotalPages}).` };
+  if (to > docTotalUnits) {
+    return { valid: false, msg: `"To ${unit}" cannot exceed total ${unit}s (${docTotalUnits}).` };
   }
   return { valid: true, from, to };
 }
@@ -204,7 +296,8 @@ function validatePageRange() {
    Step 2 — Generate quiz
 ───────────────────────────────────────── */
 async function generatePDFQuiz() {
-  if (!window.currentPDF || !pdfLevel) return;
+  const hasDoc = window.currentPDF || window.currentEPUB;
+  if (!hasDoc || !pdfLevel) return;
 
   const range = validatePageRange();
   if (!range.valid) { alert(range.msg); return; }
@@ -215,24 +308,20 @@ async function generatePDFQuiz() {
   showFlex('pdf-loading');
 
   try {
-    let extracted = '';
-    for (let i = range.from; i <= range.to; i++) {
-      const page        = await window.currentPDF.getPage(i);
-      const textContent = await page.getTextContent();
-      extracted        += textContent.items.map(item => item.str).join(' ') + ' ';
-    }
+    docText = docType === 'epub'
+      ? await extractEPUBText(range.from, range.to)
+      : await extractPDFText(range.from, range.to);
 
-    pdfText = extracted.trim();
-
-    if (pdfText.length < 100) {
+    if (docText.length < 100) {
+      const unit = docType === 'epub' ? 'chapters' : 'pages';
       throw new Error(
-        'Not enough readable text found in the selected pages. ' +
-        'Try selecting more pages, or check that the PDF is not scanned/image-based.'
+        `Not enough readable text found in the selected ${unit}. ` +
+        `Try selecting more ${unit}, or check the file is not scanned/image-based.`
       );
     }
 
-    const limitedText = pdfText.slice(0, MAX_TEXT_CHARS);
-    const questions    = await fetchPDFQuizFromAI(limitedText, pdfLevel, qcount);
+    const limitedText = docText.slice(0, MAX_TEXT_CHARS);
+    const questions   = await fetchPDFQuizFromAI(limitedText, pdfLevel, qcount);
 
     if (!Array.isArray(questions) || questions.length === 0) {
       throw new Error('AI returned no questions. Please try again.');
@@ -244,7 +333,7 @@ async function generatePDFQuiz() {
     showPDFQuizActive();
 
   } catch (err) {
-    console.error('[PDFQuiz] generate:', err);
+    console.error('[DocQuiz] generate:', err);
     hideSection('pdf-loading');
     showSection('pdf-setup');
     alert('Error: ' + (err.message || 'Something went wrong. Please try again.'));
@@ -252,8 +341,57 @@ async function generatePDFQuiz() {
 }
 
 /* ─────────────────────────────────────────
+   Text extraction — PDF
+───────────────────────────────────────── */
+async function extractPDFText(from, to) {
+  let extracted = '';
+  for (let i = from; i <= to; i++) {
+    const page        = await window.currentPDF.getPage(i);
+    const textContent = await page.getTextContent();
+    extracted        += textContent.items.map(item => item.str).join(' ') + ' ';
+  }
+  return extracted.trim();
+}
+
+/* ─────────────────────────────────────────
+   Text extraction — EPUB
+   Loads each chapter's raw XHTML in the selected range and
+   strips it down to plain text. We deliberately avoid epub.js's
+   section.render()/display() methods here — those are built for
+   on-screen rendering inside an <iframe> and are known to behave
+   unreliably when used purely for text extraction (see
+   futurepress/epub.js issues #887 and #1282). Instead we use the
+   section's load() method directly to get a parsed Document and
+   read its textContent ourselves.
+───────────────────────────────────────── */
+async function extractEPUBText(from, to) {
+  const book = window.currentEPUB;
+  let extracted = '';
+
+  for (let i = from; i <= to; i++) {
+    const ref = epubChapterRefs[i - 1];
+    if (!ref) continue;
+
+    try {
+      const section = book.spine.get(ref.href);
+      if (!section) continue;
+
+      const doc = await section.load(book.load.bind(book));
+      const bodyText = doc?.body?.textContent ?? '';
+      extracted += bodyText.replace(/\s+/g, ' ').trim() + ' ';
+
+      if (typeof section.unload === 'function') section.unload();
+
+    } catch (err) {
+      console.warn(`[DocQuiz] Could not load EPUB chapter ${i}:`, err);
+    }
+  }
+
+  return extracted.trim();
+}
+
+/* ─────────────────────────────────────────
    AI API call — with per-option explanations
-   (your prompt, preserved exactly)
 ───────────────────────────────────────── */
 async function fetchPDFQuizFromAI(text, level, count) {
   const levelDesc = {
@@ -299,8 +437,14 @@ Keep each explanation to one sentence.`;
   });
 
   if (!response.ok) {
-    const errorText = await response.text().catch(() => response.statusText);
-    throw new Error(`API error (${response.status}): ${errorText}`);
+    let msg = `API error (${response.status})`;
+    try {
+      const body = await response.json();
+      if (body?.error) msg = body.error;
+    } catch {
+      msg = response.statusText || msg;
+    }
+    throw new Error(msg);
   }
 
   const data = await response.json();
@@ -339,10 +483,10 @@ function renderPDFQuestion() {
   }
 
   setText('pdf-quiz-counter', `Question ${pdfCurrentQ + 1} of ${total}`);
-  setText('pdf-quiz-label',   `PDF Quiz — ${capitalize(pdfLevel)} level`);
+  setText('pdf-quiz-label',
+    `${docType === 'epub' ? 'EPUB' : 'PDF'} Quiz — ${capitalize(pdfLevel)} level`);
   setText('pdf-question-text', q.q);
 
-  // Remove any leftover explanation blocks from the previous question
   document.querySelectorAll('.option-explanation').forEach(e => e.remove());
 
   const optList = document.getElementById('pdf-options-list');
@@ -370,7 +514,6 @@ function renderPDFQuestion() {
     optList.appendChild(btn);
   });
 
-  // Re-show explanations if navigating back to an answered question
   if (answered) {
     renderPDFExplanations(q);
   }
@@ -406,14 +549,14 @@ function renderPDFExplanations(q) {
     const expDiv = document.createElement('div');
     expDiv.className = 'option-explanation ' +
       (i === q.answer ? 'opt-exp-correct' : 'opt-exp-wrong');
-    expDiv.textContent = text; // textContent — safe even with ✓/✗ symbols
+    expDiv.textContent = text;
     expDiv.setAttribute('role', 'note');
     btn.after(expDiv);
   });
 }
 
 function selectPDFAnswer(index) {
-  if (pdfAnswers[pdfCurrentQ] !== null) return; // already answered
+  if (pdfAnswers[pdfCurrentQ] !== null) return;
   pdfAnswers[pdfCurrentQ] = index;
 
   const q    = pdfQuiz[pdfCurrentQ];
@@ -466,7 +609,7 @@ function submitPDFQuiz() {
     percent >= 80 ? 'Excellent! You understood the material well.' :
     percent >= 60 ? 'Good work! Keep studying.'                    :
     percent >= 40 ? 'Keep reading. You can do better!'             :
-    'Read the pages again and retry!'
+    'Read the material again and retry!'
   );
 
   renderPDFBreakdown();
@@ -516,8 +659,6 @@ function renderPDFBreakdown() {
 
 /* ─────────────────────────────────────────
    "What do you want to do?" retry prompt
-   (your feature — now actually wired up via
-   submitPDFQuiz() calling this automatically)
 ───────────────────────────────────────── */
 function showPDFRetryOptions() {
   document.getElementById('pdf-retry-options')?.remove();
@@ -562,7 +703,7 @@ function showPDFRetryOptions() {
         color:#fff;font-size:13px;font-weight:700;
         font-family:Nunito,sans-serif;cursor:pointer;
       ">
-        ✨ Upload new PDF
+        ✨ Upload new document
       </button>
     </div>`;
 
@@ -584,13 +725,16 @@ function pdfRetrySame() {
 function pdfNewQuiz() {
   document.getElementById('pdf-retry-options')?.remove();
 
-  pdfText       = '';
-  pdfQuiz       = [];
-  pdfCurrentQ   = 0;
-  pdfAnswers    = [];
-  pdfLevel      = '';
-  pdfTotalPages = 0;
-  window.currentPDF = null;
+  docText            = '';
+  docType            = null;
+  pdfQuiz            = [];
+  pdfCurrentQ        = 0;
+  pdfAnswers         = [];
+  pdfLevel           = '';
+  docTotalUnits      = 0;
+  epubChapterRefs    = [];
+  window.currentPDF  = null;
+  window.currentEPUB = null;
 
   hideSection('pdf-results');
   showSection('pdf-setup');
@@ -604,7 +748,7 @@ function pdfNewQuiz() {
   const btn   = document.getElementById('pdf-gen-btn');
 
   if (area)  { area.classList.remove('has-file'); area.style.borderColor = ''; }
-  if (text)  text.textContent = 'Click to upload PDF';
+  if (text)  text.textContent = 'Click to upload PDF or EPUB';
   if (input) input.value = '';
   if (btn)   { btn.setAttribute('disabled', true); btn.setAttribute('aria-disabled', 'true'); }
 
