@@ -390,15 +390,34 @@ async function extractEPUBText(from, to) {
     if (!ref) continue;
 
     try {
-      // CONFIRMED via runtime inspection: book.spine is a plain array
-      // (no .get() method), so we use the actual spine item object we
-      // already captured in loadEPUB() rather than looking it up again.
       const section = ref.item;
       if (!section) continue;
 
-      const doc = await section.load(book.load.bind(book));
-      const bodyText = doc?.body?.textContent ?? '';
-      extracted += bodyText.replace(/\s+/g, ' ').trim() + ' ';
+      // TEMPORARY DIAGNOSTIC — book.load is undefined in this build,
+      // so log the real shape of `section` and `book` once to find
+      // the actual working method instead of guessing again.
+      if (i === from) {
+        console.log('[DocQuiz][DEBUG] section object:', section);
+        console.log('[DocQuiz][DEBUG] typeof section.load:', typeof section.load);
+        console.log('[DocQuiz][DEBUG] typeof section.render:', typeof section.render);
+        console.log('[DocQuiz][DEBUG] typeof book.load:', typeof book.load);
+        console.log('[DocQuiz][DEBUG] typeof book.request:', typeof book.request);
+        console.log('[DocQuiz][DEBUG] book keys:', Object.keys(book));
+        console.log('[DocQuiz][DEBUG] section keys:', Object.keys(section));
+      }
+
+      // Try calling section.load() with no arguments first — some
+      // epub.js builds have the section carry its own request method
+      // internally and don't need an external loader passed in at all.
+      let doc;
+      if (typeof section.load === 'function') {
+        doc = typeof book.load === 'function'
+          ? await section.load(book.load.bind(book))
+          : await section.load();
+      }
+
+      const bodyText = doc?.body?.textContent ?? (typeof doc === 'string' ? doc : '');
+      extracted += String(bodyText).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
 
       if (typeof section.unload === 'function') section.unload();
 
