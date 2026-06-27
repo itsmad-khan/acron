@@ -227,12 +227,23 @@ async function loadEPUB(arrayBuffer) {
     const book = window.ePub(arrayBuffer);
     await book.ready;
 
-    const spine = book.spine?.spineItems ?? book.spine?.items ?? [];
-    if (!spine.length) {
+    // IMPORTANT: in epub.js 0.2.x, the spine is loaded asynchronously
+    // and exposed via book.loaded.spine (a promise) — NOT synchronously
+    // available as book.spine.spineItems right after book.ready, which
+    // is a v0.3-only shape. Trying to read book.spine.spineItems here
+    // returns an empty array even for a perfectly valid EPUB.
+    const spine = await book.loaded.spine;
+
+    // spine.each() is how v0.2.x iterates spine items; collect them
+    // into a plain array we can index into for the chapter range UI.
+    const items = [];
+    spine.each(item => items.push(item));
+
+    if (!items.length) {
       throw new Error('No readable chapters found in this EPUB.');
     }
 
-    epubChapterRefs = spine.map((item, i) => ({
+    epubChapterRefs = items.map((item, i) => ({
       href:  item.href,
       label: `Chapter ${i + 1}`,
     }));
