@@ -227,28 +227,11 @@ async function loadEPUB(arrayBuffer) {
     const book = window.ePub(arrayBuffer);
     await book.ready;
 
-    // TEMPORARY DIAGNOSTIC — remove once spine access is confirmed working.
-    // Logs the real shape of the book object so we stop guessing between
-    // conflicting v0.2/v0.3 documentation examples.
-    console.log('[DocQuiz][DEBUG] book object:', book);
-    console.log('[DocQuiz][DEBUG] book.spine:', book.spine);
-    console.log('[DocQuiz][DEBUG] book.loaded:', book.loaded);
-    console.log('[DocQuiz][DEBUG] typeof book.spine.each:', typeof book.spine?.each);
-
-    // Try the most likely working pattern for 0.2.13: spine exists
-    // synchronously on `book` right after `book.ready`, and `.each()`
-    // is the iterator method (confirmed used elsewhere in 0.2.x-era
-    // community examples independent of the loaded.spine.then() pattern).
-    const items = [];
-    if (book.spine && typeof book.spine.each === 'function') {
-      book.spine.each(item => items.push(item));
-    } else if (Array.isArray(book.spine?.items)) {
-      items.push(...book.spine.items);
-    } else if (Array.isArray(book.spine?.spineItems)) {
-      items.push(...book.spine.spineItems);
-    }
-
-    console.log('[DocQuiz][DEBUG] items found:', items.length, items);
+    // CONFIRMED via runtime inspection: in this epub.js build, book.spine
+    // IS the array of spine items directly — not an object with .each(),
+    // .items, or .spineItems (those are from mismatched v0.3 / mixed-
+    // version documentation that doesn't apply here).
+    const items = Array.isArray(book.spine) ? book.spine : [];
 
     if (!items.length) {
       throw new Error('No readable chapters found in this EPUB.');
@@ -257,6 +240,8 @@ async function loadEPUB(arrayBuffer) {
     epubChapterRefs = items.map((item, i) => ({
       href:  item.href,
       label: `Chapter ${i + 1}`,
+      item:  item, // keep the real spine item so extractEPUBText() doesn't
+                   // need a (nonexistent) book.spine.get(href) lookup later
     }));
     docTotalUnits = epubChapterRefs.length;
 
@@ -405,7 +390,10 @@ async function extractEPUBText(from, to) {
     if (!ref) continue;
 
     try {
-      const section = book.spine.get(ref.href);
+      // CONFIRMED via runtime inspection: book.spine is a plain array
+      // (no .get() method), so we use the actual spine item object we
+      // already captured in loadEPUB() rather than looking it up again.
+      const section = ref.item;
       if (!section) continue;
 
       const doc = await section.load(book.load.bind(book));
