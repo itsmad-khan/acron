@@ -227,17 +227,28 @@ async function loadEPUB(arrayBuffer) {
     const book = window.ePub(arrayBuffer);
     await book.ready;
 
-    // IMPORTANT: in epub.js 0.2.x, the spine is loaded asynchronously
-    // and exposed via book.loaded.spine (a promise) — NOT synchronously
-    // available as book.spine.spineItems right after book.ready, which
-    // is a v0.3-only shape. Trying to read book.spine.spineItems here
-    // returns an empty array even for a perfectly valid EPUB.
-    const spine = await book.loaded.spine;
+    // TEMPORARY DIAGNOSTIC — remove once spine access is confirmed working.
+    // Logs the real shape of the book object so we stop guessing between
+    // conflicting v0.2/v0.3 documentation examples.
+    console.log('[DocQuiz][DEBUG] book object:', book);
+    console.log('[DocQuiz][DEBUG] book.spine:', book.spine);
+    console.log('[DocQuiz][DEBUG] book.loaded:', book.loaded);
+    console.log('[DocQuiz][DEBUG] typeof book.spine.each:', typeof book.spine?.each);
 
-    // spine.each() is how v0.2.x iterates spine items; collect them
-    // into a plain array we can index into for the chapter range UI.
+    // Try the most likely working pattern for 0.2.13: spine exists
+    // synchronously on `book` right after `book.ready`, and `.each()`
+    // is the iterator method (confirmed used elsewhere in 0.2.x-era
+    // community examples independent of the loaded.spine.then() pattern).
     const items = [];
-    spine.each(item => items.push(item));
+    if (book.spine && typeof book.spine.each === 'function') {
+      book.spine.each(item => items.push(item));
+    } else if (Array.isArray(book.spine?.items)) {
+      items.push(...book.spine.items);
+    } else if (Array.isArray(book.spine?.spineItems)) {
+      items.push(...book.spine.spineItems);
+    }
+
+    console.log('[DocQuiz][DEBUG] items found:', items.length, items);
 
     if (!items.length) {
       throw new Error('No readable chapters found in this EPUB.');
