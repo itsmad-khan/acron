@@ -393,27 +393,43 @@ async function extractEPUBText(from, to) {
       const section = ref.item;
       if (!section) continue;
 
-      // TEMPORARY DIAGNOSTIC — book.load is undefined in this build,
-      // so log the real shape of `section` and `book` once to find
-      // the actual working method instead of guessing again.
+      // TEMPORARY DIAGNOSTIC — inspect book.contents/book.zip/book.store
+      // directly, since section.load/.render and book.load/.request are
+      // all undefined in this build. These are the remaining candidates
+      // visible in book's own key list for actually fetching a chapter's
+      // raw file content out of the parsed/unzipped EPUB archive.
       if (i === from) {
-        console.log('[DocQuiz][DEBUG] section object:', section);
-        console.log('[DocQuiz][DEBUG] typeof section.load:', typeof section.load);
-        console.log('[DocQuiz][DEBUG] typeof section.render:', typeof section.render);
-        console.log('[DocQuiz][DEBUG] typeof book.load:', typeof book.load);
-        console.log('[DocQuiz][DEBUG] typeof book.request:', typeof book.request);
-        console.log('[DocQuiz][DEBUG] book keys:', Object.keys(book));
-        console.log('[DocQuiz][DEBUG] section keys:', Object.keys(section));
+        console.log('[DocQuiz][DEBUG] typeof book.contents:', typeof book.contents, book.contents);
+        console.log('[DocQuiz][DEBUG] typeof book.zip:', typeof book.zip);
+        console.log('[DocQuiz][DEBUG] typeof book.store:', typeof book.store, book.store);
+        console.log('[DocQuiz][DEBUG] typeof book.getMetadata:', typeof book.getMetadata);
+        if (book.zip) {
+          console.log('[DocQuiz][DEBUG] book.zip keys:', Object.keys(book.zip));
+          console.log('[DocQuiz][DEBUG] typeof book.zip.getText:', typeof book.zip.getText);
+          console.log('[DocQuiz][DEBUG] typeof book.zip.file:', typeof book.zip.file);
+        }
+        if (book.store) {
+          console.log('[DocQuiz][DEBUG] book.store keys:', Object.keys(book.store));
+        }
       }
 
-      // Try calling section.load() with no arguments first — some
-      // epub.js builds have the section carry its own request method
-      // internally and don't need an external loader passed in at all.
       let doc;
-      if (typeof section.load === 'function') {
-        doc = typeof book.load === 'function'
-          ? await section.load(book.load.bind(book))
-          : await section.load();
+      // Candidate 1: book.zip.getText(href) — common in zip.js-based forks
+      if (!doc && book.zip && typeof book.zip.getText === 'function') {
+        doc = await book.zip.getText(section.href);
+      }
+      // Candidate 2: book.zip is itself a JSZip instance — use .file(href)
+      if (!doc && book.zip && typeof book.zip.file === 'function') {
+        const zipEntry = book.zip.file(section.href);
+        if (zipEntry) doc = await zipEntry.async('text');
+      }
+      // Candidate 3: book.store.get(href) / book.store.getText(href)
+      if (!doc && book.store) {
+        if (typeof book.store.getText === 'function') {
+          doc = await book.store.getText(section.href);
+        } else if (typeof book.store.get === 'function') {
+          doc = await book.store.get(section.href);
+        }
       }
 
       const bodyText = doc?.body?.textContent ?? (typeof doc === 'string' ? doc : '');
