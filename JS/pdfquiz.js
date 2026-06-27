@@ -385,56 +385,31 @@ async function extractEPUBText(from, to) {
   const book = window.currentEPUB;
   let extracted = '';
 
+  // CONFIRMED via runtime inspection: book.zip.getText(path) is the
+  // real method for reading a chapter's raw XHTML out of the unzipped
+  // archive — but section.href (e.g. "title.xhtml") is relative to the
+  // EPUB's content-root folder, NOT the zip root. That root folder is
+  // derivable from book.settings.packageUrl (e.g. "OEBPS/content.opf"
+  // → root is "OEBPS/"). Computed once here rather than guessed per
+  // chapter.
+  const packageUrl  = book.settings?.packageUrl ?? '';
+  const contentRoot = packageUrl.includes('/')
+    ? packageUrl.slice(0, packageUrl.lastIndexOf('/') + 1)
+    : '';
+
   for (let i = from; i <= to; i++) {
     const ref = epubChapterRefs[i - 1];
     if (!ref) continue;
 
     try {
       const section = ref.item;
-      if (!section) continue;
+      if (!section?.href) continue;
 
-      if (i === from) {
-        console.log('[DocQuiz][DEBUG] typeof book.contents:', typeof book.contents, book.contents);
-        console.log('[DocQuiz][DEBUG] book.contents.spine[0]:', book.contents?.spine?.[0]);
-        console.log('[DocQuiz][DEBUG] book.contents.manifest:', book.contents?.manifest);
-        console.log('[DocQuiz][DEBUG] typeof book.contentsPath:', typeof book.contentsPath, book.contentsPath);
-        console.log('[DocQuiz][DEBUG] typeof book.basePath:', typeof book.basePath, book.basePath);
-        console.log('[DocQuiz][DEBUG] typeof book.settings:', book.settings);
-      }
+      const fullPath = contentRoot + section.href;
+      const doc = await book.zip.getText(fullPath);
 
-      let doc;
-
-      // The plain section.href (e.g. "title.xhtml") is relative to the
-      // EPUB's content-root folder (commonly OEBPS/, OPS/, etc.), but
-      // book.zip.getText() needs the FULL path inside the zip archive.
-      // book.contents (or book.settings.contentsPath / book.basePath)
-      // should hold that root folder — try resolving the full path
-      // with each candidate prefix before giving up.
-      const candidatePaths = [
-        section.href,
-        book.contentsPath ? book.contentsPath + section.href : null,
-        book.basePath ? book.basePath + section.href : null,
-        book.settings?.contentsPath ? book.settings.contentsPath + section.href : null,
-        'OEBPS/' + section.href,
-        'OPS/' + section.href,
-      ].filter(Boolean);
-
-      for (const path of candidatePaths) {
-        try {
-          doc = await book.zip.getText(path);
-          if (doc) {
-            if (i === from) console.log('[DocQuiz][DEBUG] Working path prefix found:', path);
-            break;
-          }
-        } catch {
-          // try next candidate path
-        }
-      }
-
-      const bodyText = doc?.body?.textContent ?? (typeof doc === 'string' ? doc : '');
-      extracted += String(bodyText).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
-
-      if (typeof section.unload === 'function') section.unload();
+      const bodyText = typeof doc === 'string' ? doc : (doc?.body?.textContent ?? '');
+      extracted += bodyText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
 
     } catch (err) {
       console.warn(`[DocQuiz] Could not load EPUB chapter ${i}:`, err);
