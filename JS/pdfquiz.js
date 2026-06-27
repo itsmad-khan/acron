@@ -393,42 +393,41 @@ async function extractEPUBText(from, to) {
       const section = ref.item;
       if (!section) continue;
 
-      // TEMPORARY DIAGNOSTIC — inspect book.contents/book.zip/book.store
-      // directly, since section.load/.render and book.load/.request are
-      // all undefined in this build. These are the remaining candidates
-      // visible in book's own key list for actually fetching a chapter's
-      // raw file content out of the parsed/unzipped EPUB archive.
       if (i === from) {
         console.log('[DocQuiz][DEBUG] typeof book.contents:', typeof book.contents, book.contents);
-        console.log('[DocQuiz][DEBUG] typeof book.zip:', typeof book.zip);
-        console.log('[DocQuiz][DEBUG] typeof book.store:', typeof book.store, book.store);
-        console.log('[DocQuiz][DEBUG] typeof book.getMetadata:', typeof book.getMetadata);
-        if (book.zip) {
-          console.log('[DocQuiz][DEBUG] book.zip keys:', Object.keys(book.zip));
-          console.log('[DocQuiz][DEBUG] typeof book.zip.getText:', typeof book.zip.getText);
-          console.log('[DocQuiz][DEBUG] typeof book.zip.file:', typeof book.zip.file);
-        }
-        if (book.store) {
-          console.log('[DocQuiz][DEBUG] book.store keys:', Object.keys(book.store));
-        }
+        console.log('[DocQuiz][DEBUG] book.contents.spine[0]:', book.contents?.spine?.[0]);
+        console.log('[DocQuiz][DEBUG] book.contents.manifest:', book.contents?.manifest);
+        console.log('[DocQuiz][DEBUG] typeof book.contentsPath:', typeof book.contentsPath, book.contentsPath);
+        console.log('[DocQuiz][DEBUG] typeof book.basePath:', typeof book.basePath, book.basePath);
+        console.log('[DocQuiz][DEBUG] typeof book.settings:', book.settings);
       }
 
       let doc;
-      // Candidate 1: book.zip.getText(href) — common in zip.js-based forks
-      if (!doc && book.zip && typeof book.zip.getText === 'function') {
-        doc = await book.zip.getText(section.href);
-      }
-      // Candidate 2: book.zip is itself a JSZip instance — use .file(href)
-      if (!doc && book.zip && typeof book.zip.file === 'function') {
-        const zipEntry = book.zip.file(section.href);
-        if (zipEntry) doc = await zipEntry.async('text');
-      }
-      // Candidate 3: book.store.get(href) / book.store.getText(href)
-      if (!doc && book.store) {
-        if (typeof book.store.getText === 'function') {
-          doc = await book.store.getText(section.href);
-        } else if (typeof book.store.get === 'function') {
-          doc = await book.store.get(section.href);
+
+      // The plain section.href (e.g. "title.xhtml") is relative to the
+      // EPUB's content-root folder (commonly OEBPS/, OPS/, etc.), but
+      // book.zip.getText() needs the FULL path inside the zip archive.
+      // book.contents (or book.settings.contentsPath / book.basePath)
+      // should hold that root folder — try resolving the full path
+      // with each candidate prefix before giving up.
+      const candidatePaths = [
+        section.href,
+        book.contentsPath ? book.contentsPath + section.href : null,
+        book.basePath ? book.basePath + section.href : null,
+        book.settings?.contentsPath ? book.settings.contentsPath + section.href : null,
+        'OEBPS/' + section.href,
+        'OPS/' + section.href,
+      ].filter(Boolean);
+
+      for (const path of candidatePaths) {
+        try {
+          doc = await book.zip.getText(path);
+          if (doc) {
+            if (i === from) console.log('[DocQuiz][DEBUG] Working path prefix found:', path);
+            break;
+          }
+        } catch {
+          // try next candidate path
         }
       }
 
